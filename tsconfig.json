@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src/main",
+    "declaration": true,
+    "declarationDir": "./dist/lib",
+    "lib": [ "es5", "es2015", "dom", "dom.iterable" ],
+    "module": "es2015",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "./dist/lib",
+    "paths": {
+      "*": [
+        "../../node_modules/@types/*",
+        "../../node_modules/*"
+      ]
+    },
+    "removeComments": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "stripInternal": true,
+    "target": "es2015",
+    "typeRoots": [
+      "../../typings/*"
+    ]
+  },
+  "include": [
+    "./src/main/**/*.ts",
+    "./typings/*.d.ts"
+  ]
+}

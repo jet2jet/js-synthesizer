@@ -1,0 +1,7 @@
+/.vs/
+/.vscode/
+/dist/
+/node_modules/
+.github
+npm-debug.log
+yarn-error.log
