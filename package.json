@@ -25,7 +25,13 @@
     "node": ">=6"
   },
   "homepage": "https://github.com/jet2jet/fluid-js",
-  "keywords": [],
+  "keywords": [
+    "fluidsynth",
+    "midi",
+    "synthesizer",
+    "soundfont",
+    "webaudio"
+  ],
   "license": "BSD-3-Clause",
   "main": "./dist/fluid.js",
   "module": "./dist/lib/index.js",
