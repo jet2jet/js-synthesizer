@@ -2,33 +2,17 @@
 import { SynthesizerDefaultValues, InterpolationValues } from './Constants';
 import ISynthesizer from './ISynthesizer';
 
+import * as MethodMessaging from './MethodMessaging';
+
 /** @internal */
 export const enum Constants {
 	ProcessorName = 'fluid-js',
 	UpdateStatus = 'updateStatus',
 }
 /** @internal */
-export interface MethodCallEventData {
-	id: number;
-	method: string;
-	args: any[];
-}
-/** @internal */
-export interface MethodReturnEventData {
-	id: number;
-	method: string;
-	val: any;
-	error?: any;
-}
-/** @internal */
 export interface SynthesizerStatus {
 	playing: boolean;
 	playerPlaying: boolean;
-}
-
-interface Defer<T> {
-	resolve(value: T): void;
-	reject(reason: any): void;
 }
 
 /** An synthesizer object with AudioWorkletNode */
@@ -37,13 +21,7 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	/** @internal */
 	private _status: SynthesizerStatus;
 	/** @internal */
-	private _port: MessagePort | null;
-	/** @internal */
-	private _defers: {
-		[id: number]: Defer<any>;
-	};
-	/** @internal */
-	private _deferId: number;
+	private _messaging: MethodMessaging.CallMessageInstance | null;
 	/** @internal */
 	private _node: AudioWorkletNode | null;
 	/** @internal */
@@ -54,55 +32,9 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 			playing: false,
 			playerPlaying: false
 		};
-		this._defers = {};
-		this._deferId = 0;
-		this._port = null;
+		this._messaging = null;
 		this._node = null;
 		this._gain = SynthesizerDefaultValues.Gain;
-	}
-
-	/** @internal */
-	private onMessage(ev: MessageEvent) {
-		const data: MethodReturnEventData = ev.data;
-		if (data.method === Constants.UpdateStatus) {
-			this._status = data.val;
-		} else {
-			const defer = this._defers[data.id];
-			if (defer) {
-				delete this._defers[data.id];
-				if ('error' in data) {
-					defer.reject(data.error);
-				} else {
-					defer.resolve(data.val);
-				}
-			} else {
-				if ('error' in data) {
-					throw data.error;
-				}
-			}
-		}
-	}
-
-	/** @internal */
-	private postCall(method: string, args: any[]) {
-		this._port!.postMessage({
-			id: -1, method, args
-		} as MethodCallEventData);
-	}
-
-	/** @internal */
-	private postCallWithPromise<T>(method: string, args: any[]): Promise<T> {
-		const id = this._deferId++;
-		if (this._deferId === Infinity || this._deferId < 0) {
-			this._deferId = 0;
-		}
-		const promise = new Promise<T>((resolve, reject) => {
-			this._defers[id] = { resolve, reject };
-		});
-		this._port!.postMessage({
-			id, method, args
-		} as MethodCallEventData);
-		return promise;
 	}
 
 	/** Audio node for this synthesizer */
@@ -119,15 +51,18 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 		});
 		this._node = node;
 
-		const port = node.port;
-		this._port = port;
-		port.addEventListener('message', this.onMessage.bind(this));
-		port.start();
+		this._messaging = MethodMessaging.initializeCallPort(node.port, (data) => {
+			if (data.method === Constants.UpdateStatus) {
+				this._status = data.val;
+				return true;
+			}
+			return false;
+		});
 		return node;
 	}
 
 	public isInitialized() {
-		return this._port !== null;
+		return this._messaging !== null;
 	}
 
 	public init(_sampleRate: number) {
@@ -135,7 +70,7 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 
 	public close() {
 		// call init instead of close
-		this.postCall('init', [0]);
+		MethodMessaging.postCall(this._messaging!, 'init', [0]);
 	}
 
 	public isPlaying() {
@@ -143,7 +78,7 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	}
 
 	public setInterpolation(value: InterpolationValues, channel?: number) {
-		this.postCall('setInterpolation', [value, channel]);
+		MethodMessaging.postCall(this._messaging!, 'setInterpolation', [value, channel]);
 	}
 
 	public getGain() {
@@ -152,34 +87,34 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 
 	public setGain(gain: number) {
 		this._gain = gain;
-		this.postCallWithPromise<void>('setGain', [gain]).then(() => {
-			return this.postCallWithPromise<number>('getGain', []);
+		MethodMessaging.postCallWithPromise<void>(this._messaging!, 'setGain', [gain]).then(() => {
+			return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'getGain', []);
 		}).then((value) => {
 			this._gain = value;
 		});
 	}
 
 	public waitForVoicesStopped() {
-		return this.postCallWithPromise<void>('waitForVoicesStopped', []);
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'waitForVoicesStopped', []);
 	}
 
 	public loadSFont(bin: ArrayBuffer) {
-		return this.postCallWithPromise<number>('loadSFont', [bin]);
+		return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'loadSFont', [bin]);
 	}
 
 	public unloadSFont(id: number) {
-		this.postCall('unloadSFont', [id]);
+		MethodMessaging.postCall(this._messaging!, 'unloadSFont', [id]);
 	}
 
 	public unloadSFontAsync(id: number) {
-		return this.postCallWithPromise<void>('unloadSFont', [id]);
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'unloadSFont', [id]);
 	}
 
 	public getSFontBankOffset(id: number) {
-		return this.postCallWithPromise<number>('getSFontBankOffset', [id]);
+		return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'getSFontBankOffset', [id]);
 	}
 	public setSFontBankOffset(id: number, offset: number) {
-		this.postCall('setSFontBankOffset', [id, offset]);
+		MethodMessaging.postCall(this._messaging!, 'setSFontBankOffset', [id, offset]);
 	}
 
 	public render() {
@@ -187,60 +122,60 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	}
 
 	public midiNoteOn(chan: number, key: number, vel: number) {
-		this.postCall('midiNoteOn', [chan, key, vel]);
+		MethodMessaging.postCall(this._messaging!, 'midiNoteOn', [chan, key, vel]);
 	}
 	public midiNoteOff(chan: number, key: number) {
-		this.postCall('midiNoteOff', [chan, key]);
+		MethodMessaging.postCall(this._messaging!, 'midiNoteOff', [chan, key]);
 	}
 	public midiKeyPressure(chan: number, key: number, val: number) {
-		this.postCall('midiKeyPressure', [chan, key, val]);
+		MethodMessaging.postCall(this._messaging!, 'midiKeyPressure', [chan, key, val]);
 	}
 	public midiControl(chan: number, ctrl: number, val: number) {
-		this.postCall('midiControl', [chan, ctrl, val]);
+		MethodMessaging.postCall(this._messaging!, 'midiControl', [chan, ctrl, val]);
 	}
 	public midiProgramChange(chan: number, prognum: number) {
-		this.postCall('midiProgramChange', [chan, prognum]);
+		MethodMessaging.postCall(this._messaging!, 'midiProgramChange', [chan, prognum]);
 	}
 	public midiChannelPressure(chan: number, val: number) {
-		this.postCall('midiChannelPressure', [chan, val]);
+		MethodMessaging.postCall(this._messaging!, 'midiChannelPressure', [chan, val]);
 	}
 	public midiPitchBend(chan: number, val: number) {
-		this.postCall('midiPitchBend', [chan, val]);
+		MethodMessaging.postCall(this._messaging!, 'midiPitchBend', [chan, val]);
 	}
 	public midiSysEx(data: Uint8Array) {
-		this.postCall('midiSysEx', [data]);
+		MethodMessaging.postCall(this._messaging!, 'midiSysEx', [data]);
 	}
 
 	public midiPitchWheelSensitivity(chan: number, val: number) {
-		this.postCall('midiPitchWheelSensitivity', [chan, val]);
+		MethodMessaging.postCall(this._messaging!, 'midiPitchWheelSensitivity', [chan, val]);
 	}
 	public midiBankSelect(chan: number, bank: number) {
-		this.postCall('midiBankSelect', [chan, bank]);
+		MethodMessaging.postCall(this._messaging!, 'midiBankSelect', [chan, bank]);
 	}
 	public midiSFontSelect(chan: number, sfontId: number) {
-		this.postCall('midiSFontSelect', [chan, sfontId]);
+		MethodMessaging.postCall(this._messaging!, 'midiSFontSelect', [chan, sfontId]);
 	}
 	public midiUnsetProgram(chan: number) {
-		this.postCall('midiUnsetProgram', [chan]);
+		MethodMessaging.postCall(this._messaging!, 'midiUnsetProgram', [chan]);
 	}
 	public midiProgramReset() {
-		this.postCall('midiProgramReset', []);
+		MethodMessaging.postCall(this._messaging!, 'midiProgramReset', []);
 	}
 	public midiSystemReset() {
-		this.postCall('midiSystemReset', []);
+		MethodMessaging.postCall(this._messaging!, 'midiSystemReset', []);
 	}
 	public midiAllNotesOff(chan?: number) {
-		this.postCall('midiAllNotesOff', [chan]);
+		MethodMessaging.postCall(this._messaging!, 'midiAllNotesOff', [chan]);
 	}
 	public midiAllSoundsOff(chan?: number) {
-		this.postCall('midiAllSoundsOff', [chan]);
+		MethodMessaging.postCall(this._messaging!, 'midiAllSoundsOff', [chan]);
 	}
 	public midiSetChannelType(chan: number, isDrum: boolean) {
-		this.postCall('midiSetChannelType', [chan, isDrum]);
+		MethodMessaging.postCall(this._messaging!, 'midiSetChannelType', [chan, isDrum]);
 	}
 
 	public resetPlayer() {
-		return this.postCallWithPromise<void>('resetPlayer', []);
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'resetPlayer', []);
 	}
 
 	public isPlayerPlaying() {
@@ -248,34 +183,34 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	}
 
 	public addSMFDataToPlayer(bin: ArrayBuffer) {
-		return this.postCallWithPromise<void>('addSMFDataToPlayer', [bin]);
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'addSMFDataToPlayer', [bin]);
 	}
 
 	public playPlayer() {
-		return this.postCallWithPromise<void>('playPlayer', []);
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'playPlayer', []);
 	}
 
 	public stopPlayer() {
-		this.postCall('stopPlayer', []);
+		MethodMessaging.postCall(this._messaging!, 'stopPlayer', []);
 	}
 
 	public retrievePlayerCurrentTick(): Promise<number> {
-		return this.postCallWithPromise<number>('retrievePlayerCurrentTick', []);
+		return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'retrievePlayerCurrentTick', []);
 	}
 	public retrievePlayerTotalTicks(): Promise<number> {
-		return this.postCallWithPromise<number>('retrievePlayerTotalTicks', []);
+		return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'retrievePlayerTotalTicks', []);
 	}
 	public retrievePlayerBpm(): Promise<number> {
-		return this.postCallWithPromise<number>('retrievePlayerBpm', []);
+		return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'retrievePlayerBpm', []);
 	}
 	public retrievePlayerMIDITempo(): Promise<number> {
-		return this.postCallWithPromise<number>('retrievePlayerMIDITempo', []);
+		return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'retrievePlayerMIDITempo', []);
 	}
 	public seekPlayer(ticks: number): void {
-		this.postCall('seekPlayer', [ticks]);
+		MethodMessaging.postCall(this._messaging!, 'seekPlayer', [ticks]);
 	}
 
 	public waitForPlayerStopped() {
-		return this.postCallWithPromise<void>('waitForPlayerStopped', []);
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'waitForPlayerStopped', []);
 	}
 }

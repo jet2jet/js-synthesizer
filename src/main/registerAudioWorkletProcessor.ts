@@ -3,10 +3,14 @@ import Synthesizer from './Synthesizer';
 
 import {
 	Constants,
-	MethodCallEventData,
-	MethodReturnEventData,
 	SynthesizerStatus
 } from './AudioWorkletNodeSynthesizer';
+
+import {
+	initializeReturnPort,
+	postReturn,
+    ReturnMessageInstance
+} from './MethodMessaging';
 
 const _module: any = AudioWorkletGlobalScope.wasmModule;
 const promiseWasmInitialized = new Promise<void>((resolve) => {
@@ -30,16 +34,20 @@ export default function registerAudioWorkletProcessor() {
 	 */
 	class Processor extends AudioWorkletProcessor {
 
-		/** @internal */
 		private synth: Synthesizer | undefined;
-		private promiseInitialized: Promise<void>;
+		private _messaging: ReturnMessageInstance;
 
 		constructor(options: AudioWorkletNodeOptions) {
 			super(options);
 
-			this.port.onmessage = this.onMessage.bind(this);
-			this.port.start();
-			this.promiseInitialized = this.doInit();
+			const promiseInitialized = this.doInit();
+			this._messaging = initializeReturnPort(this.port, promiseInitialized, () => this.synth!, (data) => {
+				if (data.method === 'init') {
+					this.synth!.init(sampleRate);
+					return true;
+				}
+				return false;
+			});
 		}
 
 		private async doInit() {
@@ -54,64 +62,11 @@ export default function registerAudioWorkletProcessor() {
 			}
 			const syn = this.synth!;
 			syn.render(outputs[0]);
-			this.post(-1, Constants.UpdateStatus, {
+			postReturn(this._messaging, -1, Constants.UpdateStatus, {
 				playing: syn.isPlaying(),
 				playerPlaying: syn.isPlayerPlaying()
 			} as SynthesizerStatus);
 			return true;
-		}
-
-		private post(id: number, method: string, value: any) {
-			if (value instanceof Promise) {
-				value.then((v) => {
-					if (id >= 0) {
-						this.port.postMessage({
-							id,
-							method,
-							val: v
-						} as MethodReturnEventData);
-					}
-				}, (error) => {
-					this.port.postMessage({
-						id,
-						method,
-						error
-					} as MethodReturnEventData);
-				});
-			} else if (id >= 0) {
-				this.port.postMessage({
-					id,
-					method,
-					val: value
-				} as MethodReturnEventData);
-			}
-		}
-
-		private postError(id: number, method: string, error: Error) {
-			// always post even if id < 0
-			this.port.postMessage({
-				id,
-				method,
-				error
-			} as MethodReturnEventData);
-		}
-
-		private onMessage(ev: MessageEvent) {
-			const data: MethodCallEventData = ev.data;
-			this.promiseInitialized.then(() => {
-				const syn: any = this.synth!;
-				if (data.method === 'init') {
-					syn.init(sampleRate);
-				} else if (!syn[data.method]) {
-					this.postError(data.id, data.method, new Error('Not implemented'));
-				} else {
-					try {
-						this.post(data.id, data.method, syn[data.method].apply(syn, data.args));
-					} catch (e) {
-						this.postError(data.id, data.method, e);
-					}
-				}
-			});
 		}
 	}
 
