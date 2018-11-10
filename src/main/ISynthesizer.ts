@@ -199,6 +199,37 @@ export default interface ISynthesizer {
 	 */
 	stopPlayer(): void;
 	/**
+	 * Retrieve current (timing that method called) tick value of the player.
+	 * initPlayer() must be called before calling this method.
+	 * @return resolved with the tick value
+	 */
+	retrievePlayerCurrentTick(): Promise<number>;
+	/**
+	 * Retrieve tick value of the last event timing of current playing data.
+	 * initPlayer() must be called before calling this method.
+	 * @return resolved with the tick value
+	 */
+	retrievePlayerTotalTicks(): Promise<number>;
+	/**
+	 * Retrieve current (timing that method called) BPM value of the player.
+	 * The BPM value is calculated by dividing 60000000 by the MIDI tempo value.
+	 * initPlayer() must be called before calling this method.
+	 * @return resolved with the BPM value
+	 */
+	retrievePlayerBpm(): Promise<number>;
+	/**
+	 * Retrieve current (timing that method called) MIDI tempo value of the player.
+	 * initPlayer() must be called before calling this method.
+	 * @return resolved with the MIDI tempo value
+	 */
+	retrievePlayerMIDITempo(): Promise<number>;
+	/**
+	 * Seeks the playing point of the player.
+	 * initPlayer() must be called before calling this method.
+	 * @param ticks the absolute tick value to seek (0 refers the first position)
+	 */
+	seekPlayer(ticks: number): void;
+	/**
 	 * Wait for finishing player process.
 	 * Note that even if resolved, some voices may still be playing.
 	 */

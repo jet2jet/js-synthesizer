@@ -341,6 +341,27 @@ export default class Synthesizer implements ISynthesizer {
 		this._playerPlaying = false;
 	}
 
+	public retrievePlayerCurrentTick(): Promise<number> {
+		this.ensurePlayerInitialized();
+		return Promise.resolve(_module._fluid_player_get_current_tick(this._player));
+	}
+	public retrievePlayerTotalTicks(): Promise<number> {
+		this.ensurePlayerInitialized();
+		return Promise.resolve(_module._fluid_player_get_total_ticks(this._player));
+	}
+	public retrievePlayerBpm(): Promise<number> {
+		this.ensurePlayerInitialized();
+		return Promise.resolve(_module._fluid_player_get_bpm(this._player));
+	}
+	public retrievePlayerMIDITempo(): Promise<number> {
+		this.ensurePlayerInitialized();
+		return Promise.resolve(_module._fluid_player_get_midi_tempo(this._player));
+	}
+	public seekPlayer(ticks: number): void {
+		this.ensurePlayerInitialized();
+		_module._fluid_player_seek(this._player, ticks);
+	}
+
 	/** @internal */
 	private ensureInitialized() {
 		if (this._synth === INVALID_POINTER) {

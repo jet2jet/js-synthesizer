@@ -259,6 +259,22 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 		this.postCall('stopPlayer', []);
 	}
 
+	public retrievePlayerCurrentTick(): Promise<number> {
+		return this.postCallWithPromise<number>('retrievePlayerCurrentTick', []);
+	}
+	public retrievePlayerTotalTicks(): Promise<number> {
+		return this.postCallWithPromise<number>('retrievePlayerTotalTicks', []);
+	}
+	public retrievePlayerBpm(): Promise<number> {
+		return this.postCallWithPromise<number>('retrievePlayerBpm', []);
+	}
+	public retrievePlayerMIDITempo(): Promise<number> {
+		return this.postCallWithPromise<number>('retrievePlayerMIDITempo', []);
+	}
+	public seekPlayer(ticks: number): void {
+		this.postCall('seekPlayer', [ticks]);
+	}
+
 	public waitForPlayerStopped() {
 		return this.postCallWithPromise<void>('waitForPlayerStopped', []);
 	}
