@@ -1,7 +1,10 @@
 
 import { SynthesizerDefaultValues, InterpolationValues } from './Constants';
+import ISequencer from './ISequencer';
 import ISynthesizer from './ISynthesizer';
 import PointerType, { INVALID_POINTER, UniquePointerType } from './PointerType';
+
+import Sequencer from './Sequencer';
 
 /** @internal */
 declare global {
@@ -428,5 +431,13 @@ export default class Synthesizer implements ISynthesizer {
 
 	public waitForPlayerStopped() {
 		return this._playerDefer ? this._playerDefer.promise : Promise.resolve();
+	}
+
+	/**
+	 * Create the sequencer object for this class.
+	 */
+	public static createSequencer(): Promise<ISequencer> {
+		const seq = new Sequencer();
+		return seq._initialize().then(() => seq);
 	}
 }
