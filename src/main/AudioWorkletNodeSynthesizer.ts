@@ -1,6 +1,9 @@
 
 import { SynthesizerDefaultValues, InterpolationValues } from './Constants';
+import ISequencer from './ISequencer';
 import ISynthesizer from './ISynthesizer';
+
+import WorkletSequencer from './WorkletSequencer';
 
 import * as MethodMessaging from './MethodMessaging';
 
@@ -212,5 +215,20 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 
 	public waitForPlayerStopped() {
 		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'waitForPlayerStopped', []);
+	}
+
+	/**
+	 * Creates a sequencer instance associated with this worklet node.
+	 */
+	public createSequencer(): Promise<ISequencer> {
+		const channel = new MessageChannel();
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'createSequencer', [channel.port2]).then(() => {
+			return new WorkletSequencer(channel.port1);
+		});
+	}
+
+	/** @internal */
+	public _getRawSynthesizer(): Promise<number> {
+		return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'getRawSynthesizer', []);
 	}
 }

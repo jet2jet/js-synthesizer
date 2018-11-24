@@ -109,20 +109,30 @@ export interface ReturnMessageInstance {
 /** @internal */
 export function initializeReturnPort(
 	port: MessagePort,
-	promiseInitialized: Promise<void>,
+	promiseInitialized: Promise<void> | null,
 	targetObjectHolder: () => any,
 	hookMessage?: HookCallMessageCallback | undefined
 ): ReturnMessageInstance {
 	const instance: ReturnMessageInstance = {
 		port: port
 	};
-	port.addEventListener('message', (e) => {
-		const data = e.data;
-		if (!data) {
-			return;
-		}
-		promiseInitialized.then(() => processCallMessage(instance.port, data, targetObjectHolder, hookMessage));
-	});
+	if (promiseInitialized) {
+		port.addEventListener('message', (e) => {
+			const data = e.data;
+			if (!data) {
+				return;
+			}
+			promiseInitialized.then(() => processCallMessage(instance.port, data, targetObjectHolder, hookMessage));
+		});
+	} else {
+		port.addEventListener('message', (e) => {
+			const data = e.data;
+			if (!data) {
+				return;
+			}
+			processCallMessage(instance.port, data, targetObjectHolder, hookMessage);
+		});
+	}
 	port.start();
 	return instance;
 }

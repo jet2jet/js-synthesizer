@@ -45,6 +45,11 @@ export default function registerAudioWorkletProcessor() {
 				if (data.method === 'init') {
 					this.synth!.init(sampleRate);
 					return true;
+				} else if (data.method === 'createSequencer') {
+					this.doCreateSequencer(data.args[0]).then(() => {
+						postReturn(this._messaging!, data.id, data.method, void (0));
+					});
+					return true;
 				}
 				return false;
 			});
@@ -54,6 +59,12 @@ export default function registerAudioWorkletProcessor() {
 			await promiseWasmInitialized;
 			this.synth = new Synthesizer();
 			this.synth.init(sampleRate);
+		}
+
+		private doCreateSequencer(port: MessagePort): Promise<void> {
+			return Synthesizer.createSequencer().then((seq) => {
+				initializeReturnPort(port, null, () => seq);
+			});
 		}
 
 		public process(_inputs: Float32Array[][], outputs: Float32Array[][]) {
