@@ -1,19 +1,16 @@
 
 import { SynthesizerDefaultValues, InterpolationValues } from './Constants';
 import ISynthesizer from './ISynthesizer';
+import PointerType, { INVALID_POINTER, UniquePointerType } from './PointerType';
 
 /** @internal */
 declare global {
 	var Module: any;
 }
 
-type PointerType = number & { _pointer_marker: number; };
-
-const INVALID_POINTER: PointerType = 0 as any as PointerType;
-
-type SettingsId = PointerType;
-type SynthId = PointerType;
-type PlayerId = PointerType;
+type SettingsId = UniquePointerType<'settings_id'>;
+type SynthId = UniquePointerType<'synth_id'>;
+type PlayerId = UniquePointerType<'player_id'>;
 
 const _module: any = typeof AudioWorkletGlobalScope !== 'undefined' ?
 	AudioWorkletGlobalScope.wasmModule : Module;
