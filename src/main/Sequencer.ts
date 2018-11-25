@@ -6,7 +6,8 @@ import SequencerEvent, { EventType } from './SequencerEvent';
 
 import Synthesizer from './Synthesizer';
 
-type SequencerId = UniquePointerType<'sequencer_id'>;
+type SequencerPointer = UniquePointerType<'sequencer_ptr'>;
+type SequencerId = number;
 
 const _module: any = typeof AudioWorkletGlobalScope !== 'undefined' ?
 	AudioWorkletGlobalScope.wasmModule : Module;
@@ -126,27 +127,38 @@ function makeEvent(event: SequencerEvent): PointerType | null {
 /** @internal */
 export default class Sequencer implements ISequencer {
 
-	private _seq: SequencerId;
+	private _seq: SequencerPointer;
+	private _seqId: SequencerId;
 
 	constructor() {
 		this._seq = INVALID_POINTER;
+		this._seqId = -1;
 	}
 
 	/** @internal */
 	public _initialize(): Promise<void> {
 		this.close();
 		this._seq = _module._new_fluid_sequencer2(0);
+		this._seqId = -1;
 		return Promise.resolve();
 	}
 
 	public close() {
 		if (this._seq !== INVALID_POINTER) {
+			if (this._seqId !== -1) {
+				_module._fluid_sequencer_unregister_client(this._seq, this._seqId);
+				this._seqId = -1;
+			}
 			_module._delete_fluid_sequencer(this._seq);
 			this._seq = INVALID_POINTER;
 		}
 	}
 
 	public registerSynthesizer(synth: ISynthesizer | number): Promise<void> {
+		if (this._seqId !== -1) {
+			_module._fluid_sequencer_unregister_client(this._seq, this._seqId);
+			this._seqId = -1;
+		}
 		let val: number;
 		if (typeof synth === 'number') {
 			val = synth;
@@ -156,7 +168,7 @@ export default class Sequencer implements ISequencer {
 			return Promise.reject(new TypeError('\'synth\' is not a compatible type instance'));
 		}
 
-		_module._fluid_sequencer_register_fluidsynth(this._seq, val);
+		this._seqId = _module._fluid_sequencer_register_fluidsynth(this._seq, val);
 		return Promise.resolve();
 	}
 
@@ -175,6 +187,7 @@ export default class Sequencer implements ISequencer {
 	public sendEventAt(event: SequencerEvent, tick: number, isAbsolute: boolean): void {
 		const ev = makeEvent(event);
 		if (ev !== null) {
+			_module._fluid_event_set_dest(ev, this._seqId);
 			_module._fluid_sequencer_send_at(this._seq, ev, tick, isAbsolute ? 1 : 0);
 			_module._delete_fluid_event(ev);
 		}
