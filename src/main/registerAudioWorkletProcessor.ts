@@ -1,5 +1,6 @@
 
 import Synthesizer from './Synthesizer';
+import waitForReady from './waitForReady';
 
 import {
 	Constants,
@@ -12,20 +13,7 @@ import {
     ReturnMessageInstance
 } from './MethodMessaging';
 
-const _module: any = AudioWorkletGlobalScope.wasmModule;
-const promiseWasmInitialized = new Promise<void>((resolve) => {
-	if (_module.calledRun) {
-		resolve();
-	} else {
-		const fn: (() => void) | undefined = _module.onRuntimeInitialized;
-		_module.onRuntimeInitialized = () => {
-			resolve();
-			if (fn) {
-				fn();
-			}
-		};
-	}
-});
+const promiseWasmInitialized = waitForReady();
 
 /** Registers processor using Synthesizer for AudioWorklet. */
 export default function registerAudioWorkletProcessor() {
