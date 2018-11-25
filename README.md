@@ -64,6 +64,7 @@ If you prefer to load fluid-js as an ES module, you can use `import` statement s
 Notes:
 
 * `fluid.js` intends the ES2015-supported environment. If you need to run the script without errors on non-ES2015 environment such as IE11 (to notify 'unsupported'), you should load those scripts dynamically, or use transpiler such as babel.
+* When just after the scripts loaded, some APIs may fail since libfluidsynth is not ready. To avoid this, you can use the Promise object returned by `Fluid.waitForReady`.
 * libfluidsynth JS file is not `import`-able and its license (LGPL v2.1) is differ from fluid-js's (BSD-3-Clause).
 
 ### With AudioWorklet
@@ -96,6 +97,26 @@ context.audioWorklet.addModule('libfluidsynth-2.0.1.js')
     });
 ```
 
+### With Web Worker
+
+fluid-js and libfluidsynth can be executed on a Web Worker. Executing on a Web Worker prevents from blocking main thread while rendering.
+
+To use fluid-js on a Web Worker, simply call `importScripts` as followings:
+
+```js
+self.importScripts('libfluidsynth-2.0.1.js');
+self.importScripts('fluid.js');
+```
+
+(You can also load fluid-js as an ES Module from the Web Worker.)
+
+Note that since the Web Audio is not supported on the Web Worker, the APIs/methods related to the Web Audio will not work. If you want to use both Web Worker and AudioWorklet, you should implement AudioWorkletProcessor manually as followings:
+
+* main thread -- create AudioWorkletNode and establish connections between Web Worker and AudioWorklet
+    * You must transfer rendered audio frames from Web Worker to AudioWorklet because AudioWorklet environment does not support creating Web Worker. By creating `MessageChannel` and sending its port instances to Web Worker and AudioWorklet, they can communicate each other directly.
+* Web Worker thread -- render audio frames into raw buffers and send it for AudioWorklet thread
+* AudioWorklet thread -- receive audio frames and 'render' it in the `process` method
+
 ## API
 
 ### Creation of Synthesizer instance
@@ -106,6 +127,24 @@ These classes implement the interface named `Fluid.ISynthesizer`.
     * Creates the general synthesizer instance. No parameters are available.
 * `Fluid.AudioWorkletNodeSynthesizer` (construct: `new Fluid.AudioWorkletNodeSynthesizer()`)
     * Creates the synthesizer instance communicating AudioWorklet (see above). No parameters are available.
+    * You must call `createAudioNode` method to use other instance methods.
+
+### Creation of Sequencer instance
+
+The `Sequencer` instance is created only via following methods:
+
+* `Fluid.Synthesizer.createSequencer` (static method)
+    * Returns the Promise object that resolves with `Fluid.ISequencer` instance. The instance can be used with `Fluid.Synthesizer` instances.
+* `Fluid.AudioWorkletNodeSynthesizer.prototype.createSequencer` (instance method)
+    * Returns the Promise object that resolves with `Fluid.ISequencer` instance. The instance can be used with `Fluid.AudioWorkletNodeSynthesizer` instances which handled `createSequencer` calls.
+
+### `Fluid` methods
+
+#### `waitForReady`
+
+Can be used to wait for the synthesizer engine's ready.
+
+Return: `Promise` object (resolves when the synthesizer engine (libfluidsynth) is ready)
 
 ### `Fluid.ISynthesizer` methods
 
