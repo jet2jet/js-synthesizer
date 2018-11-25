@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.1
+
+- Fix missing destination for sequencer
+
 ## v1.1.0
 
 - Add APIs for player status and seekings (`seekPlayer` etc.)
