@@ -1,22 +1,36 @@
 
 import { SynthesizerDefaultValues, InterpolationValues } from './Constants';
+import IMIDIEvent from './IMIDIEvent';
 import ISequencer from './ISequencer';
 import ISynthesizer from './ISynthesizer';
 import PointerType, { INVALID_POINTER, UniquePointerType } from './PointerType';
 
+import MIDIEvent, { MIDIEventType } from './MIDIEvent';
 import Sequencer from './Sequencer';
 
 /** @internal */
 declare global {
 	var Module: any;
+	function addFunction(func: Function, sig: string): number;
+	function removeFunction(funcPtr: number): void;
 }
 
 type SettingsId = UniquePointerType<'settings_id'>;
 type SynthId = UniquePointerType<'synth_id'>;
 type PlayerId = UniquePointerType<'player_id'>;
 
-const _module: any = typeof AudioWorkletGlobalScope !== 'undefined' ?
-	AudioWorkletGlobalScope.wasmModule : Module;
+let _module: any;
+let _addFunction: (func: Function, sig: string) => number;
+let _removeFunction: (funcPtr: number) => void;
+if (typeof AudioWorkletGlobalScope !== 'undefined') {
+	_module = AudioWorkletGlobalScope.wasmModule;
+	_addFunction = AudioWorkletGlobalScope.wasmAddFunction;
+	_removeFunction = AudioWorkletGlobalScope.wasmRemoveFunction;
+} else {
+	_module = Module;
+	_addFunction = addFunction;
+	_removeFunction = removeFunction;
+}
 const _fs: any = _module.FS;
 
 // wrapper to use String type
@@ -32,6 +46,31 @@ function makeRandomFileName(type: string, ext: string) {
 	return `/${type}-r${Math.random() * 65535}-${Math.random() * 65535}${ext}`;
 }
 
+/** Hook callback function type */
+export interface HookMIDIEventCallback {
+	/**
+	 * Hook callback function type.
+	 * @param synth the base synthesizer instance
+	 * @param eventType MIDI event type (e.g. 0x90 is note-on event)
+	 * @param eventData detailed event data
+	 * @return true if the event data is processed, or false if the default processing is necessary
+	 */
+	(synth: Synthesizer, eventType: number, eventData: IMIDIEvent): boolean;
+}
+
+function makeMIDIEventCallback(synth: Synthesizer, cb: HookMIDIEventCallback) {
+	return (data: PointerType, event: MIDIEventType): number => {
+		const t = _module._fluid_midi_event_get_type(event);
+		if (cb(synth, t, new MIDIEvent(event, _module))) {
+			return 0;
+		}
+		return _module._fluid_synth_handle_midi_event(data, event);
+	};
+}
+
+const defaultMIDIEventCallback: (data: PointerType, event: MIDIEventType) => number =
+	_module._fluid_synth_handle_midi_event.bind(_module);
+
 /** Default implementation of ISynthesizer */
 export default class Synthesizer implements ISynthesizer {
 	/** @internal */
@@ -42,10 +81,15 @@ export default class Synthesizer implements ISynthesizer {
 	private _player: PlayerId;
 	/** @internal */
 	private _playerPlaying: boolean;
+	/** @internal */
 	private _playerDefer: undefined | {
 		promise: Promise<void>;
 		resolve: () => void;
 	};
+	/** @internal */
+	private _playerCallbackPtr: number | null;
+	/** @internal */
+	private _fluidSynthCallback: PointerType | null;
 
 	/** @internal */
 	private _buffer: PointerType;
@@ -60,6 +104,8 @@ export default class Synthesizer implements ISynthesizer {
 		this._synth = INVALID_POINTER;
 		this._player = INVALID_POINTER;
 		this._playerPlaying = false;
+		this._playerCallbackPtr = null;
+		this._fluidSynthCallback = null;
 
 		this._buffer = INVALID_POINTER;
 		this._bufferSize = 0;
@@ -272,8 +318,21 @@ export default class Synthesizer implements ISynthesizer {
 	private _initPlayer() {
 		this._closePlayer();
 
-		this._player = _module._new_fluid_player(this._synth);
-		return this._player !== INVALID_POINTER ? Promise.resolve() :
+		const player = _module._new_fluid_player(this._synth);
+		this._player = player;
+		if (player !== INVALID_POINTER) {
+			if (this._fluidSynthCallback === null) {
+				// hacky retrieve 'fluid_synth_handle_midi_event' callback pointer
+				// * 'playback_callback' is filled with 'fluid_synth_handle_midi_event' by default.
+				// * 'playback_userdata' is filled with the synthesizer pointer by default
+				const funcPtr: PointerType = _module.HEAPU32[((player as number) + 588) >> 2]; // _fluid_player_t::playback_callback
+				const synthPtr: SynthId = _module.HEAPU32[((player as number) + 592) >> 2];    // _fluid_player_t::playback_userdata
+				if (synthPtr === this._synth) {
+					this._fluidSynthCallback = funcPtr;
+				}
+			}
+		}
+		return player !== INVALID_POINTER ? Promise.resolve() :
 			Promise.reject(new Error('Out of memory'));
 	}
 
@@ -285,6 +344,7 @@ export default class Synthesizer implements ISynthesizer {
 		this.stopPlayer();
 		_module._delete_fluid_player(p);
 		this._player = INVALID_POINTER;
+		this._playerCallbackPtr = null;
 	}
 
 	public isPlayerPlaying() {
@@ -363,6 +423,43 @@ export default class Synthesizer implements ISynthesizer {
 	public seekPlayer(ticks: number): void {
 		this.ensurePlayerInitialized();
 		_module._fluid_player_seek(this._player, ticks);
+	}
+
+	/**
+	 * Hooks MIDI events sent by the player.
+	 * initPlayer() must be called before calling this method.
+	 * @param callback hook callback function, or null to unhook
+	 */
+	public hookPlayerMIDIEvents(callback: HookMIDIEventCallback | null) {
+		this.ensurePlayerInitialized();
+
+		const oldPtr = this._playerCallbackPtr;
+		if (oldPtr === null && callback === null) {
+			return;
+		}
+		const newPtr = (
+			// if callback is specified, add function
+			callback !== null ? _addFunction(makeMIDIEventCallback(this, callback), 'iii') : (
+				// if _fluidSynthCallback is filled, set null to use it for reset callback
+				// if not, add function defaultMIDIEventCallback for reset
+				this._fluidSynthCallback !== null ? null : _addFunction(defaultMIDIEventCallback, 'iii')
+			)
+		);
+		// the third parameter of 'fluid_player_set_playback_callback' should be 'fluid_synth_t*'
+		if (oldPtr !== null && newPtr !== null) {
+			// (using defaultMIDIEventCallback also comes here)
+			_module._fluid_player_set_playback_callback(this._player, newPtr, this._synth);
+			_removeFunction(oldPtr);
+		} else {
+			if (newPtr === null) {
+				// newPtr === null --> use _fluidSynthCallback
+				_module._fluid_player_set_playback_callback(this._player, this._fluidSynthCallback!, this._synth);
+				_removeFunction(oldPtr!);
+			} else {
+				_module._fluid_player_set_playback_callback(this._player, newPtr, this._synth);
+			}
+		}
+		this._playerCallbackPtr = newPtr;
 	}
 
 	/** @internal */
