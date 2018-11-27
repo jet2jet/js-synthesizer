@@ -158,6 +158,14 @@ export default interface ISynthesizer {
 	 * @param sfontId ID of a loaded SoundFont
 	 */
 	midiSFontSelect(chan: number, sfontId: number): void;
+	/**
+	 * Change program of specified channel, with loaded SoundFont.
+	 * @param chan MIDI channel number (0 to MIDI channel count - 1)
+	 * @param sfontId ID of a loaded SoundFont
+	 * @param bank bank number in the SoundFont
+	 * @param presetNum preset number in the SoundFont
+	 */
+	midiProgramSelect(chan: number, sfontId: number, bank: number, presetNum: number): void;
 	midiUnsetProgram(chan: number): void;
 	midiProgramReset(): void;
 	midiSystemReset(): void;

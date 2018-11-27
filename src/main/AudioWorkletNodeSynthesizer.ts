@@ -158,6 +158,9 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	public midiSFontSelect(chan: number, sfontId: number) {
 		MethodMessaging.postCall(this._messaging!, 'midiSFontSelect', [chan, sfontId]);
 	}
+	public midiProgramSelect(chan: number, sfontId: number, bank: number, presetNum: number) {
+		MethodMessaging.postCall(this._messaging!, 'midiProgramSelect', [chan, sfontId, bank, presetNum]);
+	}
 	public midiUnsetProgram(chan: number) {
 		MethodMessaging.postCall(this._messaging!, 'midiUnsetProgram', [chan]);
 	}

@@ -241,6 +241,9 @@ export default class Synthesizer implements ISynthesizer {
 	public midiSFontSelect(chan: number, sfontId: number) {
 		_module._fluid_synth_sfont_select(this._synth, chan, sfontId);
 	}
+	public midiProgramSelect(chan: number, sfontId: number, bank: number, presetNum: number) {
+		_module._fluid_synth_program_select(this._synth, chan, sfontId, bank, presetNum);
+	}
 	public midiUnsetProgram(chan: number) {
 		_module._fluid_synth_unset_program(this._synth, chan);
 	}
