@@ -1,4 +1,6 @@
 
+import MessageError from './MessageError';
+
 interface MethodCallEventData {
 	id: number;
 	method: string;
@@ -9,7 +11,13 @@ interface MethodReturnEventData {
 	id: number;
 	method: string;
 	val: any;
-	error?: any;
+	error?: MessageErrorData;
+}
+
+interface MessageErrorData {
+	baseName: string;
+	message: string;
+	detail: any;
 }
 
 /** @internal */
@@ -48,6 +56,39 @@ export function initializeCallPort(
 	return instance;
 }
 
+function convertErrorTransferable(err: Error): MessageErrorData {
+	const result: any = {};
+	const objList: any[] = [];
+	let obj: any = err;
+	while (obj && obj !== Object.prototype) {
+		objList.unshift(obj);
+		obj = Object.getPrototypeOf(obj);
+	}
+	objList.forEach((o) => {
+		Object.getOwnPropertyNames(o).forEach((key) => {
+			try {
+				const data = (err as any)[key];
+				if (typeof data !== 'function' && typeof data !== 'symbol') {
+					result[key] = data;
+				}
+			} catch (_e) { }
+		});
+	});
+	return {
+		baseName: err.name,
+		message: err.message,
+		detail: result
+	};
+}
+
+function convertAnyErrorTransferable(err: any): MessageErrorData {
+	return convertErrorTransferable((err && err instanceof Error) ? err : new Error(`${err}`));
+}
+
+function makeMessageError(error: MessageErrorData): MessageError {
+	return new MessageError(error.baseName, error.message, error.detail);
+}
+
 function processReturnMessage(defers: DeferMap, hook: HookReturnMessageCallback | undefined, e: MessageEvent) {
 	const data: MethodReturnEventData = e.data;
 	if (!data) {
@@ -59,14 +100,14 @@ function processReturnMessage(defers: DeferMap, hook: HookReturnMessageCallback 
 	const defer = defers[data.id];
 	if (defer) {
 		delete defers[data.id];
-		if ('error' in data) {
-			defer.reject(data.error);
+		if (data.error) {
+			defer.reject(makeMessageError(data.error));
 		} else {
 			defer.resolve(data.val);
 		}
 	} else {
-		if ('error' in data) {
-			throw data.error;
+		if (data.error) {
+			throw makeMessageError(data.error);
 		}
 	}
 }
@@ -177,7 +218,7 @@ function postReturnImpl(port: MessagePort, id: number, method: string, value: an
 			port.postMessage({
 				id,
 				method,
-				error
+				error: convertAnyErrorTransferable(error)
 			} as MethodReturnEventData);
 		});
 	} else {
@@ -189,10 +230,10 @@ function postReturnImpl(port: MessagePort, id: number, method: string, value: an
 	}
 }
 
-function postReturnError(port: MessagePort, id: number, method: string, error: Error) {
+function postReturnError(port: MessagePort, id: number, method: string, error: any) {
 	port.postMessage({
 		id,
 		method,
-		error
+		error: convertAnyErrorTransferable(error)
 	} as MethodReturnEventData);
 }
