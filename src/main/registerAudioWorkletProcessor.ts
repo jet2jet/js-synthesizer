@@ -1,4 +1,5 @@
 
+import Sequencer from './Sequencer';
 import Synthesizer from './Synthesizer';
 import waitForReady from './waitForReady';
 
@@ -60,7 +61,22 @@ export default function registerAudioWorkletProcessor() {
 
 		private doCreateSequencer(port: MessagePort): Promise<void> {
 			return Synthesizer.createSequencer().then((seq) => {
-				initializeReturnPort(port, null, () => seq);
+				initializeReturnPort(port, null, () => seq, (data) => {
+					// special handle for Sequencer
+					if (data.method === 'getRaw') {
+						postReturn(this._messaging!, data.id, data.method, (seq as Sequencer).getRaw());
+						return true;
+					} else if (data.method === 'registerSequencerClientByName') {
+						const r = this.doRegisterSequencerClient(seq as Sequencer, data.args[0], data.args[1], data.args[2]);
+						if (r !== null) {
+							postReturn(this._messaging!, data.id, data.method, r);
+						} else {
+							postReturnError(this._messaging!, data.id, data.method, new Error('Name not found'));
+						}
+						return true;
+					}
+					return false;
+				});
 			});
 		}
 
@@ -75,6 +91,14 @@ export default function registerAudioWorkletProcessor() {
 				return true;
 			}
 			return false;
+		}
+
+		private doRegisterSequencerClient(seq: Sequencer, clientName: string, callbackName: string, param: number) {
+			const fn: any = (AudioWorkletGlobalScope[callbackName]);
+			if (fn && typeof fn === 'function') {
+				return Synthesizer.registerSequencerClient(seq, clientName, fn, param);
+			}
+			return null;
 		}
 
 		public process(_inputs: Float32Array[][], outputs: Float32Array[][]) {

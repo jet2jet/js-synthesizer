@@ -242,6 +242,26 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'hookPlayerMIDIEventsByName', [callbackName]);
 	}
 
+	/**
+	 * Registers the user-defined client to the sequencer.
+	 * The client callback function defined on AudioWorkletGlobalScope
+	 * object available in the worklet is used.
+	 * The client can receive events in the time from sequencer process.
+	 * @param seq the sequencer instance created by AudioWorkletNodeSynthesizer.createSequencer
+	 * @param clientName the client name
+	 * @param callbackName callback function name available as 'AudioWorkletGlobalScope[callbackName]',
+	 *     or falsy value ('', null, or undefined) to unhook.
+	 *     The type of 'AudioWorkletGlobalScope[callbackName]' must be SequencerClientCallback.
+	 * @param param additional parameter passed to the callback
+	 * @return Promise object that resolves with registered client id when succeeded, or rejects when failed
+	 */
+	public registerSequencerClientByName(seq: ISequencer, clientName: string, callbackName: string, param: number): Promise<number> {
+		if (!(seq instanceof WorkletSequencer)) {
+			return Promise.reject(new TypeError('Invalid sequencer object'));
+		}
+		return seq.registerSequencerClientByName(clientName, callbackName, param);
+	}
+
 	/** @internal */
 	public _getRawSynthesizer(): Promise<number> {
 		return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'getRawSynthesizer', []);

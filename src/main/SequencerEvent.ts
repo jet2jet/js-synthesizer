@@ -1,6 +1,7 @@
 
+/** Event type value */
 export const enum EventType {
-	Note = 1,
+	Note = 0,
 	NoteOn,
 	NoteOff,
 	AllSoundsOff,
@@ -8,18 +9,23 @@ export const enum EventType {
 	BankSelect,
 	ProgramChange,
 	ProgramSelect,
-	ControlChange,
 	PitchBend,
 	PitchWheelSensitivity,
 	Modulation,
 	Sustain,
+	ControlChange,
 	Pan,
 	Volume,
 	ReverbSend,
 	ChorusSend,
-	KeyPressure,
+	Timer,
+	/** internally used */
+	_AnyControlChange,
 	ChannelPressure,
-	SystemReset
+	KeyPressure,
+	SystemReset,
+	/** internally used */
+	_Unregistering
 }
 
 export interface EventBase {
@@ -214,11 +220,18 @@ export interface SystemResetEvent extends EventBase {
 	type: EventType.SystemReset | 'systemreset' | 'system-reset';
 }
 
+/** Timer event (used for marker; no effect for synthesizer) */
+export interface TimerEvent extends EventBase {
+	type: EventType.Timer | 'timer';
+	/** any number data */
+	data: number;
+}
+
 /** All available events type */
 type SequencerEvent = NoteEvent | NoteOnEvent | NoteOffEvent | AllSoundsOffEvent | AllNotesOffEvent |
 	BankSelectEvent | ProgramChangeEvent | ProgramSelectEvent |
 	ControlChangeEvent | PitchBendEvent | PitchWheelSensitivityEvent |
 	ModulationEvent | SustainEvent | PanEvent | VolumeEvent |
 	ReverbSendEvent | ChorusSendEvent |
-	KeyPressureEvent | ChannelPressureEvent | SystemResetEvent;
+	KeyPressureEvent | ChannelPressureEvent | SystemResetEvent | TimerEvent;
 export default SequencerEvent;

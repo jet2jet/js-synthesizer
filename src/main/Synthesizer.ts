@@ -2,11 +2,14 @@
 import { SynthesizerDefaultValues, InterpolationValues } from './Constants';
 import IMIDIEvent from './IMIDIEvent';
 import ISequencer from './ISequencer';
+import ISequencerEventData from './ISequencerEventData';
 import ISynthesizer from './ISynthesizer';
 import PointerType, { INVALID_POINTER, UniquePointerType } from './PointerType';
 
 import MIDIEvent, { MIDIEventType } from './MIDIEvent';
 import Sequencer from './Sequencer';
+import { EventType as SequencerEventType } from './SequencerEvent';
+import SequencerEventData from './SequencerEventData';
 
 /** @internal */
 declare global {
@@ -38,6 +41,8 @@ const fluid_synth_error: (synth: SynthId) => string =
 	_module.cwrap('fluid_synth_error', 'string', ['number']);
 const fluid_synth_sfload: (synth: SynthId, filename: string, reset_presets: number) => number =
 	_module.cwrap('fluid_synth_sfload', 'number', ['number', 'string', 'number']);
+const fluid_sequencer_register_client: (seq: PointerType, name: string, callback: number, data: number) => number =
+	_module.cwrap('fluid_sequencer_register_client', 'number', ['number', 'string', 'number', 'number']);
 
 const malloc: (size: number) => PointerType = _module._malloc.bind(_module);
 const free: (ptr: PointerType) => void = _module._free.bind(_module);
@@ -56,6 +61,19 @@ export interface HookMIDIEventCallback {
 	 * @return true if the event data is processed, or false if the default processing is necessary
 	 */
 	(synth: Synthesizer, eventType: number, eventData: IMIDIEvent): boolean;
+}
+
+/** Client callback function type for sequencer object */
+export interface SequencerClientCallback {
+	/**
+	 * Client callback function type for sequencer object.
+	 * @param time the sequencer tick value
+	 * @param eventType sequencer event type
+	 * @param event actual event data (can only be used in this callback function)
+	 * @param sequencer the base sequencer object
+	 * @param param parameter data passed to the registration method
+	 */
+	(time: number, eventType: SequencerEventType, event: ISequencerEventData, sequencer: ISequencer, param: number): void;
 }
 
 function makeMIDIEventCallback(synth: Synthesizer, cb: HookMIDIEventCallback) {
@@ -539,5 +557,30 @@ export default class Synthesizer implements ISynthesizer {
 	public static createSequencer(): Promise<ISequencer> {
 		const seq = new Sequencer();
 		return seq._initialize().then(() => seq);
+	}
+
+	/**
+	 * Registers the user-defined client to the sequencer.
+	 * The client can receive events in the time from sequencer process.
+	 * @param seq the sequencer instance created by Synthesizer.createSequencer
+	 * @param name the client name
+	 * @param callback the client callback function that processes event data
+	 * @param param additional parameter passed to the callback
+	 * @return registered sequencer client id (can be passed to seq.unregisterClient())
+	 */
+	public static registerSequencerClient(seq: ISequencer, name: string, callback: SequencerClientCallback, param: number): number {
+		if (!(seq instanceof Sequencer)) {
+			throw new TypeError('Invalid sequencer instance');
+		}
+		const ptr = _addFunction((time: number, ev: PointerType, _seq: number, data: number) => {
+			const e = new SequencerEventData(ev, _module);
+			const type: SequencerEventType = _module._fluid_event_get_type(ev);
+			callback(time, type, e, seq, data);
+		}, 'viiii');
+		const r = fluid_sequencer_register_client(seq.getRaw(), name, ptr, param);
+		if (r !== -1) {
+			seq._clientFuncMap[r] = ptr;
+		}
+		return r;
 	}
 }
