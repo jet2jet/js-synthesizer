@@ -230,6 +230,18 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 		});
 	}
 
+	/**
+	 * Hooks MIDI events sent by the player. The hook callback function defined on
+	 * AudioWorkletGlobalScope object available in the worklet is used.
+	 * @param callbackName hook callback function name available as 'AudioWorkletGlobalScope[callbackName]',
+	 *     or falsy value ('', null, or undefined) to unhook.
+	 *     The type of 'AudioWorkletGlobalScope[callbackName]' must be HookMIDIEventCallback.
+	 * @return Promise object that resolves when succeeded, or rejects when failed
+	 */
+	public hookPlayerMIDIEventsByName(callbackName: string | null | undefined): Promise<void> {
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'hookPlayerMIDIEventsByName', [callbackName]);
+	}
+
 	/** @internal */
 	public _getRawSynthesizer(): Promise<number> {
 		return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'getRawSynthesizer', []);

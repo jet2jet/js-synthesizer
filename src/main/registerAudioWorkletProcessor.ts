@@ -10,6 +10,7 @@ import {
 import {
 	initializeReturnPort,
 	postReturn,
+	postReturnError,
     ReturnMessageInstance
 } from './MethodMessaging';
 
@@ -38,6 +39,14 @@ export default function registerAudioWorkletProcessor() {
 						postReturn(this._messaging!, data.id, data.method, void (0));
 					});
 					return true;
+				} else if (data.method === 'hookPlayerMIDIEventsByName') {
+					const r = this.doHookPlayerMIDIEvents(data.args[0]);
+					if (r) {
+						postReturn(this._messaging!, data.id, data.method, void (0));
+					} else {
+						postReturnError(this._messaging!, data.id, data.method, new Error('Name not found'));
+					}
+					return true;
 				}
 				return false;
 			});
@@ -53,6 +62,19 @@ export default function registerAudioWorkletProcessor() {
 			return Synthesizer.createSequencer().then((seq) => {
 				initializeReturnPort(port, null, () => seq);
 			});
+		}
+
+		private doHookPlayerMIDIEvents(name: string | null | undefined) {
+			if (!name) {
+				this.synth!.hookPlayerMIDIEvents(null);
+				return true;
+			}
+			const fn: any = (AudioWorkletGlobalScope[name]);
+			if (fn && typeof fn === 'function') {
+				this.synth!.hookPlayerMIDIEvents(fn);
+				return true;
+			}
+			return false;
 		}
 
 		public process(_inputs: Float32Array[][], outputs: Float32Array[][]) {

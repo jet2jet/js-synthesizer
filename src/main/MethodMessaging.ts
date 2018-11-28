@@ -189,12 +189,12 @@ function processCallMessage(
 	}
 	const target = targetObjectHolder();
 	if (!target[data.method]) {
-		postReturnError(port, data.id, data.method, new Error('Not implemented'));
+		postReturnErrorImpl(port, data.id, data.method, new Error('Not implemented'));
 	} else {
 		try {
 			postReturnImpl(port, data.id, data.method, target[data.method].apply(target, data.args));
 		} catch (e) {
-			postReturnError(port, data.id, data.method, e);
+			postReturnErrorImpl(port, data.id, data.method, e);
 		}
 	}
 }
@@ -230,7 +230,12 @@ function postReturnImpl(port: MessagePort, id: number, method: string, value: an
 	}
 }
 
-function postReturnError(port: MessagePort, id: number, method: string, error: any) {
+/** @internal */
+export function postReturnError(instance: ReturnMessageInstance, id: number, method: string, error: any) {
+	postReturnErrorImpl(instance.port, id, method, error);
+}
+
+function postReturnErrorImpl(port: MessagePort, id: number, method: string, error: any) {
 	port.postMessage({
 		id,
 		method,
