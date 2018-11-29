@@ -15,10 +15,10 @@ npm install --save fluid-js
 
 ### From main thread
 
-Copies `dist/fluid.js` (or `dist/fluid.min.js`) and `externals/libfluidsynth-2.0.1.js` (libfluidsynth JS file) to your project, and writes `<script>` tags as following order:
+Copies `dist/fluid.js` (or `dist/fluid.min.js`) and `externals/libfluidsynth-2.0.2.js` (libfluidsynth JS file) to your project, and writes `<script>` tags as following order:
 
 ```html
-<script src="libfluidsynth-2.0.1.js"></script>
+<script src="libfluidsynth-2.0.2.js"></script>
 <script src="fluid.js"></script>
 ```
 
@@ -73,7 +73,7 @@ fluid-js supports AudioWorklet process via `dist/fluid.worklet.js` (or `dist/flu
 
 ```js
 var context = new AudioContext();
-context.audioWorklet.addModule('libfluidsynth-2.0.1.js')
+context.audioWorklet.addModule('libfluidsynth-2.0.2.js')
     .then(function () {
         return context.audioWorklet.addModule('fluid.worklet.js');
     })
@@ -104,7 +104,7 @@ fluid-js and libfluidsynth can be executed on a Web Worker. Executing on a Web W
 To use fluid-js on a Web Worker, simply call `importScripts` as followings:
 
 ```js
-self.importScripts('libfluidsynth-2.0.1.js');
+self.importScripts('libfluidsynth-2.0.2.js');
 self.importScripts('fluid.js');
 ```
 
@@ -137,6 +137,65 @@ The `Sequencer` instance is created only via following methods:
     * Returns the Promise object that resolves with `Fluid.ISequencer` instance. The instance can be used with `Fluid.Synthesizer` instances.
 * `Fluid.AudioWorkletNodeSynthesizer.prototype.createSequencer` (instance method)
     * Returns the Promise object that resolves with `Fluid.ISequencer` instance. The instance can be used with `Fluid.AudioWorkletNodeSynthesizer` instances which handled `createSequencer` calls.
+
+### Using hook / handle MIDI-related event data with user-defined calllback
+
+NOTE: `libfluidsynth-2.0.2.js` (or above) is necessary to use this feature.
+
+From v1.2.0, you can hook MIDI events posted by player. For `Fluid.Synthesizer` instance, use `hookPlayerMIDIEvents` method as followings:
+
+```js
+syn.hookPlayerMIDIEvents(function (s, type, event) {
+    // hook '0xC0' event (Program Change event)
+    if (type === 0xC0) {
+        // if the 'program' value is 0, use another SoundFont
+        if (event.getProgram() === 0) {
+            syn.midiProgramSelect(event.getChannel(), secondSFont, 0, 0);
+            return true;
+        }
+    }
+    // return false to use default processings for other events
+    return false;
+});
+```
+
+For `Fluid.AudioWorkletNodeSynthesizer` instance, use `hookPlayerMIDIEventsByName` as followings:
+
+* worklet.js
+
+```js
+// We must add method to AudioWorkletGlobalScope to pass to another module.
+AudioWorkletGlobalScope.myHookPlayerEvents = function (s, type, event, data) {
+    if (type === 0xC0) {
+        if (event.getProgram() === 0) {
+            // 'secondSFont' will be passed from 'hookPlayerMIDIEventsByName'
+            s.midiProgramSelect(event.getChannel(), data.secondSFont, 0, 0);
+            return true;
+        }
+    }
+    return false;
+};
+```
+
+* main.js
+
+```js
+// before use this, 'worklet.js' above must be loaded as AudioWorklet completely, and
+// syn.createAudioNode must be called to activate worklet.
+
+// The first parameter is the method name added to 'AudioWorkletGlobalScope'.
+// The second parameter will be passed to the worklet.
+syn.hookPlayerMIDIEventsByName('myHookPlayerEvents', { secondSFont: secondSFont });
+```
+
+The sequencer also supports 'user-defined client' to handle event data.
+
+* For sequncer instance created by `Synthesizer.createSequencer`, use `Synthesizer.registerSequencerClient` static method.
+    * You can use `Synthesizer.sendEventNow` static method to event data processed by the synthesizer or another clients.
+* For sequncer instance created by `createSequencer` of `AudioWorkletNodeSynthesizer`, use `registerSequencerClientByName` instance method.
+    * The callback function must be added to 'AudioWorkletGlobalScope' like `hookPlayerMIDIEventsByName`'s callback.
+    * To re-send event data, use `Synthesizer.sendEventNow` in the worklet. `Synthesizer` constructor is available via `AudioWorkletGlobalScope.Fluid.Synthesizer`.
+* You can rewrite event data passed to the callback, with using `Fluid.rewriteEventData` (`AudioWorkletGlobalScope.Fluid.rewriteEventData` for worklet).
 
 ### `Fluid` methods
 
