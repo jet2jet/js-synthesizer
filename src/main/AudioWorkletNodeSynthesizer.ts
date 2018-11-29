@@ -236,10 +236,12 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	 * @param callbackName hook callback function name available as 'AudioWorkletGlobalScope[callbackName]',
 	 *     or falsy value ('', null, or undefined) to unhook.
 	 *     The type of 'AudioWorkletGlobalScope[callbackName]' must be HookMIDIEventCallback.
+	 * @param param any additional data passed to the callback.
+	 *     This data must be 'Transferable' data.
 	 * @return Promise object that resolves when succeeded, or rejects when failed
 	 */
-	public hookPlayerMIDIEventsByName(callbackName: string | null | undefined): Promise<void> {
-		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'hookPlayerMIDIEventsByName', [callbackName]);
+	public hookPlayerMIDIEventsByName(callbackName: string | null | undefined, param?: any): Promise<void> {
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'hookPlayerMIDIEventsByName', [callbackName, param]);
 	}
 
 	/**

@@ -41,7 +41,7 @@ export default function registerAudioWorkletProcessor() {
 					});
 					return true;
 				} else if (data.method === 'hookPlayerMIDIEventsByName') {
-					const r = this.doHookPlayerMIDIEvents(data.args[0]);
+					const r = this.doHookPlayerMIDIEvents(data.args[0], data.args[1]);
 					if (r) {
 						postReturn(this._messaging!, data.id, data.method, void (0));
 					} else {
@@ -80,14 +80,14 @@ export default function registerAudioWorkletProcessor() {
 			});
 		}
 
-		private doHookPlayerMIDIEvents(name: string | null | undefined) {
+		private doHookPlayerMIDIEvents(name: string | null | undefined, param: any) {
 			if (!name) {
 				this.synth!.hookPlayerMIDIEvents(null);
 				return true;
 			}
 			const fn: any = (AudioWorkletGlobalScope[name]);
 			if (fn && typeof fn === 'function') {
-				this.synth!.hookPlayerMIDIEvents(fn);
+				this.synth!.hookPlayerMIDIEvents(fn, param);
 				return true;
 			}
 			return false;

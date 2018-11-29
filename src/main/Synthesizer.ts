@@ -58,9 +58,10 @@ export interface HookMIDIEventCallback {
 	 * @param synth the base synthesizer instance
 	 * @param eventType MIDI event type (e.g. 0x90 is note-on event)
 	 * @param eventData detailed event data
+	 * @param param parameter data passed to the registration method
 	 * @return true if the event data is processed, or false if the default processing is necessary
 	 */
-	(synth: Synthesizer, eventType: number, eventData: IMIDIEvent): boolean;
+	(synth: Synthesizer, eventType: number, eventData: IMIDIEvent, param: any): boolean;
 }
 
 /** Client callback function type for sequencer object */
@@ -76,10 +77,10 @@ export interface SequencerClientCallback {
 	(time: number, eventType: SequencerEventType, event: ISequencerEventData, sequencer: ISequencer, param: number): void;
 }
 
-function makeMIDIEventCallback(synth: Synthesizer, cb: HookMIDIEventCallback) {
+function makeMIDIEventCallback(synth: Synthesizer, cb: HookMIDIEventCallback, param: any) {
 	return (data: PointerType, event: MIDIEventType): number => {
 		const t = _module._fluid_midi_event_get_type(event);
-		if (cb(synth, t, new MIDIEvent(event, _module))) {
+		if (cb(synth, t, new MIDIEvent(event, _module), param)) {
 			return 0;
 		}
 		return _module._fluid_synth_handle_midi_event(data, event);
@@ -447,8 +448,9 @@ export default class Synthesizer implements ISynthesizer {
 	 * Hooks MIDI events sent by the player.
 	 * initPlayer() must be called before calling this method.
 	 * @param callback hook callback function, or null to unhook
+	 * @param param any additional data passed to the callback
 	 */
-	public hookPlayerMIDIEvents(callback: HookMIDIEventCallback | null) {
+	public hookPlayerMIDIEvents(callback: HookMIDIEventCallback | null, param?: any) {
 		this.ensurePlayerInitialized();
 
 		const oldPtr = this._playerCallbackPtr;
@@ -457,7 +459,7 @@ export default class Synthesizer implements ISynthesizer {
 		}
 		const newPtr = (
 			// if callback is specified, add function
-			callback !== null ? _addFunction(makeMIDIEventCallback(this, callback), 'iii') : (
+			callback !== null ? _addFunction(makeMIDIEventCallback(this, callback, param), 'iii') : (
 				// if _fluidSynthCallback is filled, set null to use it for reset callback
 				// if not, add function defaultMIDIEventCallback for reset
 				this._fluidSynthCallback !== null ? null : _addFunction(defaultMIDIEventCallback, 'iii')
