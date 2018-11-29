@@ -8,7 +8,7 @@ import PointerType, { INVALID_POINTER, UniquePointerType } from './PointerType';
 
 import MIDIEvent, { MIDIEventType } from './MIDIEvent';
 import Sequencer from './Sequencer';
-import { EventType as SequencerEventType } from './SequencerEvent';
+import SequencerEvent, { EventType as SequencerEventType } from './SequencerEvent';
 import SequencerEventData from './SequencerEventData';
 
 /** @internal */
@@ -582,5 +582,43 @@ export default class Synthesizer implements ISynthesizer {
 			seq._clientFuncMap[r] = ptr;
 		}
 		return r;
+	}
+
+	/**
+	 * Send sequencer event immediately to the specific client.
+	 * @param seq the sequencer instance created by Synthesizer.createSequencer
+	 * @param clientId registered client id (-1 for registered synthesizer)
+	 * @param event event data
+	 */
+	public static sendEventToClientNow(seq: ISequencer, clientId: number, event: SequencerEvent): void {
+		if (!(seq instanceof Sequencer)) {
+			throw new TypeError('Invalid sequencer instance');
+		}
+		seq.sendEventToClientNow(clientId, event);
+	}
+	/**
+	 * (Re-)send event data immediately.
+	 * @param seq the sequencer instance created by Synthesizer.createSequencer
+	 * @param clientId registered client id (-1 for registered synthesizer)
+	 * @param eventData event data which can be retrieved in SequencerClientCallback
+	 */
+	public static sendEventNow(seq: ISequencer, clientId: number, eventData: ISequencerEventData): void {
+		if (!(seq instanceof Sequencer)) {
+			throw new TypeError('Invalid sequencer instance');
+		}
+		seq.sendEventNow(clientId, eventData);
+	}
+	/**
+	 * Set interval timer process to call processSequencer for this sequencer.
+	 * This method uses 'setInterval' global method to register timer.
+	 * @param seq the sequencer instance created by Synthesizer.createSequencer
+	 * @param msec time in milliseconds passed to both setInterval and processSequencer
+	 * @return return value of 'setInterval' (usually passing to 'clearInterval' will reset event)
+	 */
+	public static setIntervalForSequencer(seq: ISequencer, msec: number) {
+		if (!(seq instanceof Sequencer)) {
+			throw new TypeError('Invalid sequencer instance');
+		}
+		return seq.setIntervalForSequencer(msec);
 	}
 }

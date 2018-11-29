@@ -26,7 +26,7 @@ export default interface ISequencer {
 	registerSynthesizer(synth: ISynthesizer | number): Promise<number>;
 	/**
 	 * Unregister the client registered to this sequencer.
-	 * @param clientId registered client id
+	 * @param clientId registered client id (-1 for registered synthesizer)
 	 */
 	unregisterClient(clientId: number): void;
 	/**
@@ -69,11 +69,19 @@ export default interface ISequencer {
 	sendEventAt(event: SequencerEvent, tick: number, isAbsolute: boolean): void;
 	/**
 	 * Send event at the specified timing to the specific client.
-	 * @param clientId registered client id
+	 * @param clientId registered client id (-1 for registered synthesizer)
 	 * @param event event data
 	 * @param tick tick value to process event at (depend on the time scale)
 	 * @param isAbsolute true if tick is an absolute value, or
 	 *     false if tick is the relative value from the current time
 	 */
 	sendEventToClientAt(clientId: number, event: SequencerEvent, tick: number, isAbsolute: boolean): void;
+
+	/**
+	 * Process events queued in the sequencer.
+	 * If a synthesizer is registered, the processing is executed via synthesizer's render process automatically.
+	 * If not registered, you must use this method to process events.
+	 * @param msecToProcess time in milliseconds to advance sequencer process
+	 */
+	processSequencer(msecToProcess: number): void;
 }

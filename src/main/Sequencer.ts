@@ -1,9 +1,10 @@
 
 import ISequencer, { ClientInfo } from './ISequencer';
-import { rewriteEventDataImpl } from './ISequencerEventData';
+import ISequencerEventData, { rewriteEventDataImpl } from './ISequencerEventData';
 import ISynthesizer from './ISynthesizer';
 import PointerType, { INVALID_POINTER, UniquePointerType } from './PointerType';
 import SequencerEvent from './SequencerEvent';
+import SequencerEventData from './SequencerEventData';
 
 import Synthesizer from './Synthesizer';
 
@@ -96,6 +97,12 @@ export default class Sequencer implements ISequencer {
 	}
 
 	public unregisterClient(clientId: number): void {
+		if (clientId === -1) {
+			clientId = this._seqId;
+			if (clientId === -1) {
+				return;
+			}
+		}
 		_module._fluid_sequencer_unregister_client(this._seq, clientId);
 		if (this._seqId === clientId) {
 			this._seqId = -1;
@@ -158,9 +165,42 @@ export default class Sequencer implements ISequencer {
 	public sendEventToClientAt(clientId: number, event: SequencerEvent, tick: number, isAbsolute: boolean): void {
 		const ev = makeEvent(event);
 		if (ev !== null) {
-			_module._fluid_event_set_dest(ev, clientId);
+			_module._fluid_event_set_dest(ev, clientId === -1 ? this._seqId : clientId);
 			_module._fluid_sequencer_send_at(this._seq, ev, tick, isAbsolute ? 1 : 0);
 			_module._delete_fluid_event(ev);
 		}
+	}
+
+	/** @internal */
+	public sendEventToClientNow(clientId: number, event: SequencerEvent): void {
+		const ev = makeEvent(event);
+		if (ev !== null) {
+			_module._fluid_event_set_dest(ev, clientId === -1 ? this._seqId : clientId);
+			_module._fluid_sequencer_send_now(this._seq, ev);
+			_module._delete_fluid_event(ev);
+		}
+	}
+
+	/** @internal */
+	public sendEventNow(clientId: number, eventData: ISequencerEventData): void {
+		if (!(eventData instanceof SequencerEventData)) {
+			return;
+		}
+		const ev = eventData.getRaw();
+		if (ev !== INVALID_POINTER) {
+			_module._fluid_event_set_dest(ev, clientId === -1 ? this._seqId : clientId);
+			_module._fluid_sequencer_send_now(this._seq, ev);
+		}
+	}
+
+	public processSequencer(msecToProcess: number) {
+		if (this._seq !== INVALID_POINTER) {
+			_module._fluid_sequencer_process(this._seq, msecToProcess);
+		}
+	}
+
+	/** @internal */
+	public setIntervalForSequencer(msec: number) {
+		return setInterval(() => this.processSequencer(msec), msec);
 	}
 }
