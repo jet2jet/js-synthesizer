@@ -12,7 +12,7 @@
     }
   },
   "dependencies": {},
-  "description": "Wrapper JS library of fluidsynth for using with Web Audio or etc.",
+  "description": "Synthesizer library for web-based JS program, using with Web Audio or etc.",
   "devDependencies": {
     "better-npm-run": "^0.1.1",
     "ts-project-loader": "^0.1.2",
@@ -24,21 +24,25 @@
   "engines": {
     "node": ">=6"
   },
-  "homepage": "https://github.com/jet2jet/fluid-js",
+  "homepage": "https://github.com/jet2jet/js-synthesizer",
   "keywords": [
+    "javascript",
+    "synthesizer",
     "fluidsynth",
     "midi",
-    "synthesizer",
+    "midi-player",
+    "sequencer",
     "soundfont",
+    "audio",
     "webaudio"
   ],
   "license": "BSD-3-Clause",
-  "main": "./dist/fluid.js",
+  "main": "./dist/js-synthesizer.js",
   "module": "./dist/lib/index.js",
-  "name": "fluid-js",
+  "name": "js-synthesizer",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jet2jet/fluid-js.git"
+    "url": "https://github.com/jet2jet/js-synthesizer.git"
   },
   "scripts": {
     "build": "better-npm-run build:dev",

@@ -4,9 +4,11 @@ import registerAudioWorkletProcessor from './registerAudioWorkletProcessor';
 import { rewriteEventData } from './ISequencerEventData';
 import Synthesizer from './Synthesizer';
 
-AudioWorkletGlobalScope.Fluid = {
+AudioWorkletGlobalScope.JSSynth = {
 	rewriteEventData: rewriteEventData,
 	Synthesizer: Synthesizer
 };
+// deprecated
+AudioWorkletGlobalScope.Fluid = AudioWorkletGlobalScope.JSSynth;
 
 registerAudioWorkletProcessor();

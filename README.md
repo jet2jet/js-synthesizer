@@ -1,33 +1,35 @@
-[![NPM version](https://badge.fury.io/js/fluid-js.svg)](https://www.npmjs.com/package/fluid-js)
+[![NPM version](https://badge.fury.io/js/js-synthesizer.svg)](https://www.npmjs.com/package/js-synthesizer)
 
-fluid-js
+js-synthesizer
 ==========
 
-fluid-js is a library that generates audio data (frames). fluid-js uses wasm version of FluidSynth.
+(old package name: `fluid-js`)
+
+js-synthesizer is a library that generates audio data (frames). [WebAssembly (wasm) version of FluidSynth](https://github.com/jet2jet/fluidsynth-emscripten) is used as a core synthesizer engine.
 
 ## Install
 
 ```
-npm install --save fluid-js
+npm install --save js-synthesizer
 ```
 
 ## Usage
 
 ### From main thread
 
-Copies `dist/fluid.js` (or `dist/fluid.min.js`) and `externals/libfluidsynth-2.0.2.js` (libfluidsynth JS file) to your project, and writes `<script>` tags as following order:
+Copies `dist/js-synthesizer.js` (or `dist/js-synthesizer.min.js`) and `externals/libfluidsynth-2.0.2.js` (libfluidsynth JS file) to your project, and writes `<script>` tags as following order:
 
 ```html
 <script src="libfluidsynth-2.0.2.js"></script>
-<script src="fluid.js"></script>
+<script src="js-synthesizer.js"></script>
 ```
 
-When scripts are available, you can use APIs via `Fluid` namespace object.
+When scripts are available, you can use APIs via `JSSynth` namespace object.
 
 ```js
 // Prepare the AudioContext instance
 var context = new AudioContext();
-var synth = new Fluid.Synthesizer();
+var synth = new JSSynth.Synthesizer();
 synth.init(context.sampleRate);
 
 // Create AudioNode (ScriptProcessorNode) to output audio data
@@ -59,27 +61,27 @@ synth.loadSFont(sfontBuffer).then(function () {
 
 (Above example uses Web Audio API, but you can use `Synthesizer` without Web Audio, by using `render()` method.)
 
-If you prefer to load fluid-js as an ES module, you can use `import` statement such as `import * as Fluid from 'fluid-js'`.
+If you prefer to load js-synthesizer as an ES module, you can use `import` statement such as `import * as JSSynth from 'js-synthesizer'`.
 
 Notes:
 
-* `fluid.js` intends the ES2015-supported environment. If you need to run the script without errors on non-ES2015 environment such as IE11 (to notify 'unsupported'), you should load those scripts dynamically, or use transpiler such as babel.
-* When just after the scripts loaded, some APIs may fail since libfluidsynth is not ready. To avoid this, you can use the Promise object returned by `Fluid.waitForReady`.
-* libfluidsynth JS file is not `import`-able and its license (LGPL v2.1) is differ from fluid-js's (BSD-3-Clause).
+* `js-synthesizer.js` intends the ES2015-supported environment. If you need to run the script without errors on non-ES2015 environment such as IE11 (to notify 'unsupported'), you should load those scripts dynamically, or use transpiler such as babel.
+* When just after the scripts loaded, some APIs may fail since libfluidsynth is not ready. To avoid this, you can use the Promise object returned by `JSSynth.waitForReady`.
+* libfluidsynth JS file is not `import`-able and its license (LGPL v2.1) is differ from js-synthesizer's (BSD-3-Clause).
 
 ### With AudioWorklet
 
-fluid-js supports AudioWorklet process via `dist/fluid.worklet.js` (or `dist/fluid.worklet.min.js`). You can load fluid-js on the AudioWorklet as the following code:
+js-synthesizer supports AudioWorklet process via `dist/js-synthesizer.worklet.js` (or `dist/js-synthesizer.worklet.min.js`). You can load js-synthesizer on the AudioWorklet as the following code:
 
 ```js
 var context = new AudioContext();
 context.audioWorklet.addModule('libfluidsynth-2.0.2.js')
     .then(function () {
-        return context.audioWorklet.addModule('fluid.worklet.js');
+        return context.audioWorklet.addModule('js-synthesizer.worklet.js');
     })
     .then(function () {
         // Create the synthesizer instance for AudioWorkletNode
-        var synth = new Fluid.AudioWorkletNodeSynthesizer();
+        var synth = new JSSynth.AudioWorkletNodeSynthesizer();
         synth.init(context.sampleRate);
         // You must create AudioWorkletNode before using other methods
         // (This is because the message port is not available until the
@@ -99,16 +101,16 @@ context.audioWorklet.addModule('libfluidsynth-2.0.2.js')
 
 ### With Web Worker
 
-fluid-js and libfluidsynth can be executed on a Web Worker. Executing on a Web Worker prevents from blocking main thread while rendering.
+js-synthesizer and libfluidsynth can be executed on a Web Worker. Executing on a Web Worker prevents from blocking main thread while rendering.
 
-To use fluid-js on a Web Worker, simply call `importScripts` as followings:
+To use js-synthesizer on a Web Worker, simply call `importScripts` as followings:
 
 ```js
 self.importScripts('libfluidsynth-2.0.2.js');
-self.importScripts('fluid.js');
+self.importScripts('js-synthesizer.js');
 ```
 
-(You can also load fluid-js as an ES Module from the Web Worker.)
+(You can also load js-synthesizer as an ES Module from the Web Worker.)
 
 Note that since the Web Audio is not supported on the Web Worker, the APIs/methods related to the Web Audio will not work. If you want to use both Web Worker and AudioWorklet, you should implement AudioWorkletProcessor manually as followings:
 
@@ -121,11 +123,11 @@ Note that since the Web Audio is not supported on the Web Worker, the APIs/metho
 
 ### Creation of Synthesizer instance
 
-These classes implement the interface named `Fluid.ISynthesizer`.
+These classes implement the interface named `JSSynth.ISynthesizer`.
 
-* `Fluid.Synthesizer` (construct: `new Fluid.Synthesizer()`)
+* `JSSynth.Synthesizer` (construct: `new JSSynth.Synthesizer()`)
     * Creates the general synthesizer instance. No parameters are available.
-* `Fluid.AudioWorkletNodeSynthesizer` (construct: `new Fluid.AudioWorkletNodeSynthesizer()`)
+* `JSSynth.AudioWorkletNodeSynthesizer` (construct: `new JSSynth.AudioWorkletNodeSynthesizer()`)
     * Creates the synthesizer instance communicating AudioWorklet (see above). No parameters are available.
     * You must call `createAudioNode` method to use other instance methods.
 
@@ -133,16 +135,16 @@ These classes implement the interface named `Fluid.ISynthesizer`.
 
 The `Sequencer` instance is created only via following methods:
 
-* `Fluid.Synthesizer.createSequencer` (static method)
-    * Returns the Promise object that resolves with `Fluid.ISequencer` instance. The instance can be used with `Fluid.Synthesizer` instances.
-* `Fluid.AudioWorkletNodeSynthesizer.prototype.createSequencer` (instance method)
-    * Returns the Promise object that resolves with `Fluid.ISequencer` instance. The instance can be used with `Fluid.AudioWorkletNodeSynthesizer` instances which handled `createSequencer` calls.
+* `JSSynth.Synthesizer.createSequencer` (static method)
+    * Returns the Promise object that resolves with `JSSynth.ISequencer` instance. The instance can be used with `JSSynth.Synthesizer` instances.
+* `JSSynth.AudioWorkletNodeSynthesizer.prototype.createSequencer` (instance method)
+    * Returns the Promise object that resolves with `JSSynth.ISequencer` instance. The instance can be used with `JSSynth.AudioWorkletNodeSynthesizer` instances which handled `createSequencer` calls.
 
 ### Using hook / handle MIDI-related event data with user-defined calllback
 
 NOTE: `libfluidsynth-2.0.2.js` (or above) is necessary to use this feature.
 
-From v1.2.0, you can hook MIDI events posted by player. For `Fluid.Synthesizer` instance, use `hookPlayerMIDIEvents` method as followings:
+From v1.2.0, you can hook MIDI events posted by player. For `JSSynth.Synthesizer` instance, use `hookPlayerMIDIEvents` method as followings:
 
 ```js
 syn.hookPlayerMIDIEvents(function (s, type, event) {
@@ -159,7 +161,7 @@ syn.hookPlayerMIDIEvents(function (s, type, event) {
 });
 ```
 
-For `Fluid.AudioWorkletNodeSynthesizer` instance, use `hookPlayerMIDIEventsByName` as followings:
+For `JSSynth.AudioWorkletNodeSynthesizer` instance, use `hookPlayerMIDIEventsByName` as followings:
 
 * worklet.js
 
@@ -194,10 +196,10 @@ The sequencer also supports 'user-defined client' to handle event data.
     * You can use `Synthesizer.sendEventNow` static method to event data processed by the synthesizer or another clients.
 * For sequncer instance created by `createSequencer` of `AudioWorkletNodeSynthesizer`, use `registerSequencerClientByName` instance method.
     * The callback function must be added to 'AudioWorkletGlobalScope' like `hookPlayerMIDIEventsByName`'s callback.
-    * To re-send event data, use `Synthesizer.sendEventNow` in the worklet. `Synthesizer` constructor is available via `AudioWorkletGlobalScope.Fluid.Synthesizer`.
-* You can rewrite event data passed to the callback, with using `Fluid.rewriteEventData` (`AudioWorkletGlobalScope.Fluid.rewriteEventData` for worklet).
+    * To re-send event data, use `Synthesizer.sendEventNow` in the worklet. `Synthesizer` constructor is available via `AudioWorkletGlobalScope.JSSynth.Synthesizer`.
+* You can rewrite event data passed to the callback, with using `JSSynth.rewriteEventData` (`AudioWorkletGlobalScope.JSSynth.rewriteEventData` for worklet).
 
-### `Fluid` methods
+### `JSSynth` methods
 
 #### `waitForReady`
 
@@ -205,11 +207,11 @@ Can be used to wait for the synthesizer engine's ready.
 
 Return: `Promise` object (resolves when the synthesizer engine (libfluidsynth) is ready)
 
-### `Fluid.ISynthesizer` methods
+### `JSSynth.ISynthesizer` methods
 
 (Not documented yet. Please see `dist/lib/ISynthesizer.d.ts`.)
 
 ## License
 
-fluid-js is licensed under [BSD 3-Clause License](./LICENSE) except for the files in `externals` directory.
+js-synthesizer is licensed under [BSD 3-Clause License](./LICENSE) except for the files in `externals` directory.
 For licenses of the files in `externals` directory, please read [`externals/README.md`](./externals/README.md).

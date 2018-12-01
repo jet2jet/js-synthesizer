@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.0
+
+- Rename package name to `js-synthesizer` (from `fluid-js`)
+  - Old `fluid`-related files are currently supported, but will be removed in the future.
+- The root namespace `Fluid` is changed to `JSSynth` for `js-synthesizer.js` file
+  - The namespace `Fluid` is only available when using `fluid.js` (or files beginning with `fluid`), and the namespace `JSSynth` is only available when using `js-synthesizer.js` (or files beginning with `js-synthesizer`).
+
 ## v1.2.0
 
 - Update libfluidsynth to 2.0.2 (using [fluidsynth-emscripten v2.0.2-em-fix1](https://github.com/jet2jet/fluidsynth-emscripten/releases/tag/v2.0.2-em-fix1))
