@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.1
+
+- Fix to send 'unregister' event explicitly before unregistering client from Sequencer, to avoid access violation ('index out of range' error in JS)
+
 ## v1.4.0
 
 - Add `SynthesizerSettings` object for initialization of synthesizer
