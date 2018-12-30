@@ -277,6 +277,12 @@ export default class Synthesizer implements ISynthesizer {
 		this._gain = _module._fluid_synth_get_gain(this._synth);
 	}
 
+	public setChannelType(channel: number, isDrum: boolean) {
+		this.ensureInitialized();
+		// CHANNEL_TYPE_MELODIC = 0, CHANNEL_TYPE_DRUM = 1
+		_module._fluid_synth_set_channel_type(this._synth, channel, isDrum ? 1 : 0);
+	}
+
 	public waitForVoicesStopped() {
 		return this.flushFramesAsync();
 	}

@@ -39,6 +39,13 @@ export default interface ISynthesizer {
 	 * @param gain the gain value (0.0-10.0)
 	 */
 	setGain(gain: number): void;
+	/**
+	 * Specify the channel type, especially whether the channel is for drums.
+	 * init() must be called before calling this method.
+	 * @param channel MIDI channel number (0 to MIDI channel count - 1)
+	 * @param isDrum true for drums, false for melodic channels
+	 */
+	setChannelType(channel: number, isDrum: boolean): void;
 	/** Wait for all voices stopped. */
 	waitForVoicesStopped(): Promise<void>;
 

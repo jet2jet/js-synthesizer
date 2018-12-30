@@ -104,6 +104,10 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 		});
 	}
 
+	public setChannelType(channel: number, isDrum: boolean) {
+		MethodMessaging.postCall(this._messaging!, 'setChannelType', [channel, isDrum]);
+	}
+
 	public waitForVoicesStopped() {
 		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'waitForVoicesStopped', []);
 	}
