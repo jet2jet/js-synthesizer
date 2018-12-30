@@ -19,16 +19,25 @@ declare global {
 
 let _module: any;
 let _removeFunction: (funcPtr: number) => void;
-if (typeof AudioWorkletGlobalScope !== 'undefined') {
-	_module = AudioWorkletGlobalScope.wasmModule;
-	_removeFunction = AudioWorkletGlobalScope.wasmRemoveFunction;
-} else {
-	_module = Module;
-	_removeFunction = removeFunction;
-}
 
-const fluid_sequencer_get_client_name: (seq: number, id: number) => string =
-	_module.cwrap('fluid_sequencer_get_client_name', 'string', ['number', 'number']);
+let fluid_sequencer_get_client_name: (seq: number, id: number) => string;
+
+function bindFunctions() {
+	if (_module) {
+		return;
+	}
+
+	if (typeof AudioWorkletGlobalScope !== 'undefined') {
+		_module = AudioWorkletGlobalScope.wasmModule;
+		_removeFunction = AudioWorkletGlobalScope.wasmRemoveFunction;
+	} else {
+		_module = Module;
+		_removeFunction = removeFunction;
+	}
+
+	fluid_sequencer_get_client_name =
+		_module.cwrap('fluid_sequencer_get_client_name', 'string', ['number', 'number']);
+}
 
 function makeEvent(event: SequencerEvent): PointerType | null {
 	const ev = _module._new_fluid_event();
@@ -49,6 +58,8 @@ export default class Sequencer implements ISequencer {
 	public _clientFuncMap: { [id: number]: number };
 
 	constructor() {
+		bindFunctions();
+
 		this._seq = INVALID_POINTER;
 		this._seqId = -1;
 		this._clientFuncMap = {};

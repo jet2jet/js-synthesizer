@@ -39,6 +39,8 @@ let fluid_sequencer_register_client: (seq: PointerType, name: string, callback: 
 let malloc: (size: number) => PointerType;
 let free: (ptr: PointerType) => void;
 
+let defaultMIDIEventCallback: (data: PointerType, event: MIDIEventType) => number;
+
 function bindFunctions() {
 	if (fluid_synth_error) {
 		// (already bound)
@@ -72,6 +74,8 @@ function bindFunctions() {
 
 	malloc = _module._malloc.bind(_module);
 	free = _module._free.bind(_module);
+
+	defaultMIDIEventCallback = _module._fluid_synth_handle_midi_event.bind(_module);
 }
 
 function setBoolValueForSettings(settings: SettingsId, name: string, value: boolean | undefined) {
@@ -134,9 +138,6 @@ function makeMIDIEventCallback(synth: Synthesizer, cb: HookMIDIEventCallback, pa
 		return _module._fluid_synth_handle_midi_event(data, event);
 	};
 }
-
-const defaultMIDIEventCallback: (data: PointerType, event: MIDIEventType) => number =
-	_module._fluid_synth_handle_midi_event.bind(_module);
 
 /** Default implementation of ISynthesizer */
 export default class Synthesizer implements ISynthesizer {
