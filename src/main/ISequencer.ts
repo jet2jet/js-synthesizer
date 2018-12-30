@@ -76,6 +76,15 @@ export default interface ISequencer {
 	 *     false if tick is the relative value from the current time
 	 */
 	sendEventToClientAt(clientId: number, event: SequencerEvent, tick: number, isAbsolute: boolean): void;
+	/**
+	 * Remove all queued events for all registered clients.
+	 */
+	removeAllEvents(): void;
+	/**
+	 * Remove all queued events for specific client.
+	 * @param clientId registered client id (-1 for registered synthesizer)
+	 */
+	removeAllEventsFromClient(clientId: number): void;
 
 	/**
 	 * Process events queued in the sequencer.

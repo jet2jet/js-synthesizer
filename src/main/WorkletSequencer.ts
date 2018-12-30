@@ -68,6 +68,12 @@ export default class WorkletSequencer implements ISequencer {
 	public sendEventToClientAt(clientId: number, event: SequencerEvent, tick: number, isAbsolute: boolean): void {
 		MethodMessaging.postCall(this._messaging!, 'sendEventToClientAt', [clientId, event, tick, isAbsolute]);
 	}
+	public removeAllEvents(): void {
+		MethodMessaging.postCall(this._messaging!, 'removeAllEvents', []);
+	}
+	public removeAllEventsFromClient(clientId: number): void {
+		MethodMessaging.postCall(this._messaging!, 'removeAllEventsFromClient', [clientId]);
+	}
 
 	public processSequencer(msecToProcess: number) {
 		MethodMessaging.postCall(this._messaging!, 'processSequencer', [msecToProcess]);

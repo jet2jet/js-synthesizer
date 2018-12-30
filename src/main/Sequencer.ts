@@ -204,6 +204,14 @@ export default class Sequencer implements ISequencer {
 		}
 	}
 
+	public removeAllEvents(): void {
+		_module._fluid_sequencer_remove_events(this._seq, -1, -1, -1);
+	}
+
+	public removeAllEventsFromClient(clientId: number): void {
+		_module._fluid_sequencer_remove_events(this._seq, -1, clientId === -1 ? this._seqId : clientId, -1);
+	}
+
 	public processSequencer(msecToProcess: number) {
 		if (this._seq !== INVALID_POINTER) {
 			_module._fluid_sequencer_process(this._seq, msecToProcess);
