@@ -1,5 +1,6 @@
 
 import { InterpolationValues } from './Constants';
+import SynthesizerSettings from './SynthesizerSettings';
 
 /**
  * Abstract synthesizer object.
@@ -12,8 +13,9 @@ export default interface ISynthesizer {
 	/**
 	 * Initialize the instance. If already initialized, the instance is re-initialized.
 	 * @param sampleRate sample rate for rendered frames
+	 * @param settings synthesizer settings
 	 */
-	init(sampleRate: number): void;
+	init(sampleRate: number, settings?: SynthesizerSettings): void;
 	/**
 	 * Terminate the instance.
 	 * You can call this method even if not initialized.

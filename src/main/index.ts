@@ -8,6 +8,7 @@ import MessageError from './MessageError';
 import SequencerEvent, { EventType } from './SequencerEvent';
 import * as SequencerEventTypes from './SequencerEvent';
 import Synthesizer, { HookMIDIEventCallback, SequencerClientCallback } from './Synthesizer';
+import SynthesizerSettings from './SynthesizerSettings';
 import waitForReady from './waitForReady';
 import AudioWorkletNodeSynthesizer from './AudioWorkletNodeSynthesizer';
 
@@ -25,6 +26,7 @@ export {
 	SequencerEvent,
 	SequencerEventTypes,
 	Synthesizer,
+	SynthesizerSettings,
 	waitForReady,
 	AudioWorkletNodeSynthesizer
 };

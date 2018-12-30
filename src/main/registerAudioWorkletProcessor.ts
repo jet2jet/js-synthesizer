@@ -1,6 +1,7 @@
 
 import Sequencer from './Sequencer';
 import Synthesizer from './Synthesizer';
+import SynthesizerSettings from './SynthesizerSettings';
 import waitForReady from './waitForReady';
 
 import {
@@ -30,10 +31,13 @@ export default function registerAudioWorkletProcessor() {
 		constructor(options: AudioWorkletNodeOptions) {
 			super(options);
 
-			const promiseInitialized = this.doInit();
+			const settings: SynthesizerSettings | undefined =
+				options.processorOptions && options.processorOptions.settings;
+
+			const promiseInitialized = this.doInit(settings);
 			this._messaging = initializeReturnPort(this.port, promiseInitialized, () => this.synth!, (data) => {
 				if (data.method === 'init') {
-					this.synth!.init(sampleRate);
+					this.synth!.init(sampleRate, settings);
 					return true;
 				} else if (data.method === 'createSequencer') {
 					this.doCreateSequencer(data.args[0]).then(() => {
@@ -53,10 +57,10 @@ export default function registerAudioWorkletProcessor() {
 			});
 		}
 
-		private async doInit() {
+		private async doInit(settings?: SynthesizerSettings | undefined) {
 			await promiseWasmInitialized;
 			this.synth = new Synthesizer();
-			this.synth.init(sampleRate);
+			this.synth.init(sampleRate, settings);
 		}
 
 		private doCreateSequencer(port: MessagePort): Promise<void> {

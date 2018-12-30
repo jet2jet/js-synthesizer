@@ -2,6 +2,7 @@
 import { SynthesizerDefaultValues, InterpolationValues } from './Constants';
 import ISequencer from './ISequencer';
 import ISynthesizer from './ISynthesizer';
+import SynthesizerSettings from './SynthesizerSettings';
 
 import WorkletSequencer from './WorkletSequencer';
 
@@ -45,12 +46,18 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 		return this._node;
 	}
 
-	public createAudioNode(context: AudioContext) {
+	/**
+	 * Create AudiWorkletNode instance
+	 */
+	public createAudioNode(context: AudioContext, settings?: SynthesizerSettings) {
 		const node = new AudioWorkletNode(context, Constants.ProcessorName, {
 			numberOfInputs: 0,
 			numberOfOutputs: 1,
 			channelCount: 2,
-			outputChannelCount: [2]
+			outputChannelCount: [2],
+			processorOptions: {
+				settings: settings
+			}
 		});
 		this._node = node;
 
@@ -68,7 +75,7 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 		return this._messaging !== null;
 	}
 
-	public init(_sampleRate: number) {
+	public init(_sampleRate: number, _settings?: SynthesizerSettings) {
 	}
 
 	public close() {

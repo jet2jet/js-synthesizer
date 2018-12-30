@@ -5,6 +5,7 @@ import ISequencer from './ISequencer';
 import ISequencerEventData from './ISequencerEventData';
 import ISynthesizer from './ISynthesizer';
 import PointerType, { INVALID_POINTER, UniquePointerType } from './PointerType';
+import SynthesizerSettings from './SynthesizerSettings';
 
 import MIDIEvent, { MIDIEventType } from './MIDIEvent';
 import Sequencer from './Sequencer';
@@ -25,27 +26,74 @@ type PlayerId = UniquePointerType<'player_id'>;
 let _module: any;
 let _addFunction: (func: Function, sig: string) => number;
 let _removeFunction: (funcPtr: number) => void;
-if (typeof AudioWorkletGlobalScope !== 'undefined') {
-	_module = AudioWorkletGlobalScope.wasmModule;
-	_addFunction = AudioWorkletGlobalScope.wasmAddFunction;
-	_removeFunction = AudioWorkletGlobalScope.wasmRemoveFunction;
-} else {
-	_module = Module;
-	_addFunction = addFunction;
-	_removeFunction = removeFunction;
-}
-const _fs: any = _module.FS;
+let _fs: any;
 
 // wrapper to use String type
-const fluid_synth_error: (synth: SynthId) => string =
-	_module.cwrap('fluid_synth_error', 'string', ['number']);
-const fluid_synth_sfload: (synth: SynthId, filename: string, reset_presets: number) => number =
-	_module.cwrap('fluid_synth_sfload', 'number', ['number', 'string', 'number']);
-const fluid_sequencer_register_client: (seq: PointerType, name: string, callback: number, data: number) => number =
-	_module.cwrap('fluid_sequencer_register_client', 'number', ['number', 'string', 'number', 'number']);
+let fluid_settings_setint: (settings: SettingsId, name: string, val: number) => number;
+let fluid_settings_setnum: (settings: SettingsId, name: string, val: number) => number;
+let fluid_settings_setstr: (settings: SettingsId, name: string, str: string) => number;
+let fluid_synth_error: (synth: SynthId) => string;
+let fluid_synth_sfload: (synth: SynthId, filename: string, reset_presets: number) => number;
+let fluid_sequencer_register_client: (seq: PointerType, name: string, callback: number, data: number) => number;
 
-const malloc: (size: number) => PointerType = _module._malloc.bind(_module);
-const free: (ptr: PointerType) => void = _module._free.bind(_module);
+let malloc: (size: number) => PointerType;
+let free: (ptr: PointerType) => void;
+
+function bindFunctions() {
+	if (fluid_synth_error) {
+		// (already bound)
+		return;
+	}
+
+	if (typeof AudioWorkletGlobalScope !== 'undefined') {
+		_module = AudioWorkletGlobalScope.wasmModule;
+		_addFunction = AudioWorkletGlobalScope.wasmAddFunction;
+		_removeFunction = AudioWorkletGlobalScope.wasmRemoveFunction;
+	} else {
+		_module = Module;
+		_addFunction = addFunction;
+		_removeFunction = removeFunction;
+	}
+	_fs = _module.FS;
+
+	// wrapper to use String type
+	fluid_settings_setint =
+		_module.cwrap('fluid_settings_setint', 'number', ['number', 'string', 'number']);
+	fluid_settings_setnum =
+		_module.cwrap('fluid_settings_setnum', 'number', ['number', 'string', 'number']);
+	fluid_settings_setstr =
+		_module.cwrap('fluid_settings_setstr', 'number', ['number', 'string', 'string']);
+	fluid_synth_error =
+		_module.cwrap('fluid_synth_error', 'string', ['number']);
+	fluid_synth_sfload =
+		_module.cwrap('fluid_synth_sfload', 'number', ['number', 'string', 'number']);
+	fluid_sequencer_register_client =
+		_module.cwrap('fluid_sequencer_register_client', 'number', ['number', 'string', 'number', 'number']);
+
+	malloc = _module._malloc.bind(_module);
+	free = _module._free.bind(_module);
+}
+
+function setBoolValueForSettings(settings: SettingsId, name: string, value: boolean | undefined) {
+	if (typeof value !== 'undefined') {
+		fluid_settings_setint(settings, name, value ? 1 : 0);
+	}
+}
+function setIntValueForSettings(settings: SettingsId, name: string, value: number | undefined) {
+	if (typeof value !== 'undefined') {
+		fluid_settings_setint(settings, name, value);
+	}
+}
+function setNumValueForSettings(settings: SettingsId, name: string, value: number | undefined) {
+	if (typeof value !== 'undefined') {
+		fluid_settings_setnum(settings, name, value);
+	}
+}
+function setStrValueForSettings(settings: SettingsId, name: string, value: string | undefined) {
+	if (typeof value !== 'undefined') {
+		fluid_settings_setstr(settings, name, value);
+	}
+}
 
 function makeRandomFileName(type: string, ext: string) {
 	return `/${type}-r${Math.random() * 65535}-${Math.random() * 65535}${ext}`;
@@ -119,7 +167,9 @@ export default class Synthesizer implements ISynthesizer {
 	private _gain: number;
 
 	constructor() {
-		this._settings = _module._new_fluid_settings();
+		bindFunctions();
+
+		this._settings = INVALID_POINTER;
 		this._synth = INVALID_POINTER;
 		this._player = INVALID_POINTER;
 		this._playerPlaying = false;
@@ -149,11 +199,47 @@ export default class Synthesizer implements ISynthesizer {
 		return node;
 	}
 
-	public init(sampleRate: number) {
+	public init(sampleRate: number, settings?: SynthesizerSettings) {
 		this.close();
+
+		const set = this._settings = _module._new_fluid_settings();
+		fluid_settings_setnum(set, 'synth.sample-rate', sampleRate);
+		if (settings) {
+			if (typeof settings.initialGain !== 'undefined') {
+				this._gain = settings.initialGain;
+			}
+			setBoolValueForSettings(set, 'synth.chorus.active', settings.chorusActive);
+			setNumValueForSettings(set, 'synth.chorus.depth', settings.chorusDepth);
+			setNumValueForSettings(set, 'synth.chorus.level', settings.chorusLevel);
+			setIntValueForSettings(set, 'synth.chorus.nr', settings.chorusNr);
+			setNumValueForSettings(set, 'synth.chorus.speed', settings.chorusSpeed);
+			setIntValueForSettings(set, 'synth.midi-channels', settings.midiChannelCount);
+			setStrValueForSettings(set, 'synth.midi-bank-select', settings.midiBankSelect);
+			setIntValueForSettings(set, 'synth.min-note-length', settings.minNoteLength);
+			setNumValueForSettings(set, 'synth.overflow.age', settings.overflowAge);
+			setNumValueForSettings(set, 'synth.overflow.important', settings.overflowImportantValue);
+			if (typeof settings.overflowImportantChannels !== 'undefined') {
+				fluid_settings_setstr(
+					set,
+					'synth.overflow.important-channels',
+					settings.overflowImportantChannels.join(',')
+				);
+			}
+			setNumValueForSettings(set, 'synth.overflow.percussion', settings.overflowPercussion);
+			setNumValueForSettings(set, 'synth.overflow.released', settings.overflowReleased);
+			setNumValueForSettings(set, 'synth.overflow.sustained', settings.overflowSustained);
+			setNumValueForSettings(set, 'synth.overflow.volume', settings.overflowVolume);
+			setIntValueForSettings(set, 'synth.polyphony', settings.polyphony);
+			setBoolValueForSettings(set, 'synth.reverb.active', settings.reverbActive);
+			setNumValueForSettings(set, 'synth.reverb.damp', settings.reverbDamp);
+			setNumValueForSettings(set, 'synth.reverb.level', settings.reverbLevel);
+			setNumValueForSettings(set, 'synth.reverb.room-size', settings.reverbRoomSize);
+			setNumValueForSettings(set, 'synth.reverb.width', settings.reverbWidth);
+		}
+		fluid_settings_setint(set, 'synth.gain', this._gain);
+
 		this._synth = _module._new_fluid_synth(this._settings);
-		_module._fluid_synth_set_gain(this._synth, this._gain);
-		_module._fluid_synth_set_sample_rate(this._synth, sampleRate);
+
 		this._initPlayer();
 	}
 
@@ -164,6 +250,8 @@ export default class Synthesizer implements ISynthesizer {
 		this._closePlayer();
 		_module._delete_fluid_synth(this._synth);
 		this._synth = INVALID_POINTER;
+		_module._delete_fluid_settings(this._settings);
+		this._settings = INVALID_POINTER;
 	}
 
 	public isPlaying() {
@@ -557,6 +645,7 @@ export default class Synthesizer implements ISynthesizer {
 	 * Create the sequencer object for this class.
 	 */
 	public static createSequencer(): Promise<ISequencer> {
+		bindFunctions();
 		const seq = new Sequencer();
 		return seq._initialize().then(() => seq);
 	}
