@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4.0
+
+- Add `SynthesizerSettings` object for initialization of synthesizer
+  - The object can be specified for `init` method of `Synthesizer`, or `createAudioNode` method of `AudioWorkletNodeSynthesizer`.
+- Add `setChannelType` method for Synthesizer (`ISynthesizer`)
+- Add `removeAllEvents` / `removeAllEventsFromClient` methods for Sequencer (`ISequencer`)
+
 ## v1.3.0
 
 - Rename package name to `js-synthesizer` (from `fluid-js`)
