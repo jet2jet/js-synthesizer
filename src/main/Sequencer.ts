@@ -80,10 +80,10 @@ export default class Sequencer implements ISequencer {
 
 	public close() {
 		if (this._seq !== INVALID_POINTER) {
-			if (this._seqId !== -1) {
-				_module._fluid_sequencer_unregister_client(this._seq, this._seqId);
-				this._seqId = -1;
-			}
+			Object.keys(this._clientFuncMap).forEach((clientIdStr) => {
+				this.unregisterClient(Number(clientIdStr));
+			});
+			this.unregisterClient(-1);
 			_module._delete_fluid_sequencer(this._seq);
 			this._seq = INVALID_POINTER;
 		}
@@ -114,6 +114,15 @@ export default class Sequencer implements ISequencer {
 				return;
 			}
 		}
+
+		// send 'unregistering' event
+		const ev = _module._new_fluid_event();
+		_module._fluid_event_set_source(ev, -1);
+		_module._fluid_event_set_dest(ev, clientId);
+		_module._fluid_event_unregistering(ev);
+		_module._fluid_sequencer_send_now(this._seq, ev);
+		_module._delete_fluid_event(ev);
+
 		_module._fluid_sequencer_unregister_client(this._seq, clientId);
 		if (this._seqId === clientId) {
 			this._seqId = -1;
