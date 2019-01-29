@@ -390,6 +390,7 @@ export default class Synthesizer implements ISynthesizer {
 		_module.HEAPU8.set(data, mem);
 		_module._fluid_synth_sysex(this._synth, mem, len,
 			INVALID_POINTER, INVALID_POINTER, INVALID_POINTER, 0);
+		free(mem);
 	}
 
 	public midiPitchWheelSensitivity(chan: number, val: number) {
