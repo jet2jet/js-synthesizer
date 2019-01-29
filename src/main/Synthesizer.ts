@@ -429,6 +429,7 @@ export default class Synthesizer implements ISynthesizer {
 		return this._initPlayer();
 	}
 
+	/** @internal */
 	private _initPlayer() {
 		this._closePlayer();
 
@@ -450,6 +451,7 @@ export default class Synthesizer implements ISynthesizer {
 			Promise.reject(new Error('Out of memory'));
 	}
 
+	/** @internal */
 	private _closePlayer() {
 		const p = this._player;
 		if (p === INVALID_POINTER) {
