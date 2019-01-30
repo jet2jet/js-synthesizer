@@ -1,5 +1,12 @@
 
-import { SynthesizerDefaultValues, InterpolationValues } from './Constants';
+import {
+	SynthesizerDefaultValues,
+	InterpolationValues,
+	ChorusModulation,
+	GeneratorTypes,
+	LegatoMode,
+	PortamentoMode
+} from './Constants';
 import IMIDIEvent from './IMIDIEvent';
 import ISequencer from './ISequencer';
 import ISequencerEventData from './ISequencerEventData';
@@ -163,6 +170,8 @@ export default class Synthesizer implements ISynthesizer {
 	private _buffer: PointerType;
 	/** @internal */
 	private _bufferSize: number;
+	/** @internal */
+	private _numPtr: PointerType;
 
 	/** @internal */
 	private _gain: number;
@@ -179,6 +188,7 @@ export default class Synthesizer implements ISynthesizer {
 
 		this._buffer = INVALID_POINTER;
 		this._bufferSize = 0;
+		this._numPtr = INVALID_POINTER;
 
 		this._gain = SynthesizerDefaultValues.Gain;
 	}
@@ -241,6 +251,8 @@ export default class Synthesizer implements ISynthesizer {
 
 		this._synth = _module._new_fluid_synth(this._settings);
 
+		this._numPtr = malloc(8);
+
 		this._initPlayer();
 	}
 
@@ -253,6 +265,8 @@ export default class Synthesizer implements ISynthesizer {
 		this._synth = INVALID_POINTER;
 		_module._delete_fluid_settings(this._settings);
 		this._settings = INVALID_POINTER;
+		free(this._numPtr);
+		this._numPtr = INVALID_POINTER;
 	}
 
 	public isPlaying() {
@@ -425,6 +439,212 @@ export default class Synthesizer implements ISynthesizer {
 		// CHANNEL_TYPE_DRUM = 1
 		_module._fluid_synth_set_channel_type(this._synth, chan, isDrum ? 1 : 0);
 	}
+
+	/**
+	 * Set reverb parameters to the synthesizer.
+	 */
+	public setReverb(roomsize: number, damping: number, width: number, level: number) {
+		_module._fluid_synth_set_reverb(this._synth, roomsize, damping, width, level);
+	}
+	/**
+	 * Set reverb roomsize parameter to the synthesizer.
+	 */
+	public setReverbRoomsize(roomsize: number) {
+		_module._fluid_synth_set_reverb_roomsize(this._synth, roomsize);
+	}
+	/**
+	 * Set reverb damping parameter to the synthesizer.
+	 */
+	public setReverbDamp(damping: number) {
+		_module._fluid_synth_set_reverb_damp(this._synth, damping);
+	}
+	/**
+	 * Set reverb width parameter to the synthesizer.
+	 */
+	public setReverbWidth(width: number) {
+		_module._fluid_synth_set_reverb_width(this._synth, width);
+	}
+	/**
+	 * Set reverb level to the synthesizer.
+	 */
+	public setReverbLevel(level: number) {
+		_module._fluid_synth_set_reverb_level(this._synth, level);
+	}
+	/**
+	 * Enable or disable reverb effect of the synthesizer.
+	 */
+	public setReverbOn(on: boolean) {
+		_module._fluid_synth_set_reverb_on(this._synth, on ? 1 : 0);
+	}
+	/**
+	 * Get reverb roomsize parameter of the synthesizer.
+	 */
+	public getReverbRoomsize(): number {
+		return _module._fluid_synth_get_reverb_roomsize(this._synth);
+	}
+	/**
+	 * Get reverb damping parameter of the synthesizer.
+	 */
+	public getReverbDamp(): number {
+		return _module._fluid_synth_get_reverb_damp(this._synth);
+	}
+	/**
+	 * Get reverb level of the synthesizer.
+	 */
+	public getReverbLevel(): number {
+		return _module._fluid_synth_get_reverb_level(this._synth);
+	}
+	/**
+	 * Get reverb width parameter of the synthesizer.
+	 */
+	public getReverbWidth(): number {
+		return _module._fluid_synth_get_reverb_width(this._synth);
+	}
+
+	/**
+	 * Set chorus parameters to the synthesizer.
+	 */
+	public setChorus(voiceCount: number, level: number, speed: number, depthMillisec: number, type: ChorusModulation) {
+		_module._fluid_synth_set_chorus(this._synth, voiceCount, level, speed, depthMillisec, type);
+	}
+	/**
+	 * Set chorus voice count parameter to the synthesizer.
+	 */
+	public setChorusVoiceCount(voiceCount: number) {
+		_module._fluid_synth_set_chorus_nr(this._synth, voiceCount);
+	}
+	/**
+	 * Set chorus level parameter to the synthesizer.
+	 */
+	public setChorusLevel(level: number) {
+		_module._fluid_synth_set_chorus_level(this._synth, level);
+	}
+	/**
+	 * Set chorus speed parameter to the synthesizer.
+	 */
+	public setChorusSpeed(speed: number) {
+		_module._fluid_synth_set_chorus_speed(this._synth, speed);
+	}
+	/**
+	 * Set chorus depth parameter to the synthesizer.
+	 */
+	public setChorusDepth(depthMillisec: number) {
+		_module._fluid_synth_set_chorus_depth(this._synth, depthMillisec);
+	}
+	/**
+	 * Set chorus modulation type to the synthesizer.
+	 */
+	public setChorusType(type: ChorusModulation) {
+		_module._fluid_synth_set_chorus_type(this._synth, type);
+	}
+	/**
+	 * Enable or disable chorus effect of the synthesizer.
+	 */
+	public setChorusOn(on: boolean) {
+		_module._fluid_synth_set_chorus_on(this._synth, on ? 1 : 0);
+	}
+	/**
+	 * Get chorus voice count of the synthesizer.
+	 */
+	public getChorusVoiceCount(): number {
+		return _module._fluid_synth_get_chorus_nr(this._synth);
+	}
+	/**
+	 * Get chorus level of the synthesizer.
+	 */
+	public getChorusLevel(): number {
+		return _module._fluid_synth_get_chorus_level(this._synth);
+	}
+	/**
+	 * Get chorus speed of the synthesizer.
+	 */
+	public getChorusSpeed(): number {
+		return _module._fluid_synth_get_chorus_speed(this._synth);
+	}
+	/**
+	 * Get chorus depth (in milliseconds) of the synthesizer.
+	 */
+	public getChorusDepth(): number {
+		return _module._fluid_synth_get_chorus_depth(this._synth);
+	}
+	/**
+	 * Get chorus modulation type of the synthesizer.
+	 */
+	public getChorusType(): ChorusModulation {
+		return _module._fluid_synth_get_chorus_type(this._synth);
+	}
+
+	/**
+	 * Get generator value assigned to the MIDI channel.
+	 * @param channel MIDI channel number
+	 * @param param generator ID
+	 * @return a value related to the generator
+	 */
+	public getGenerator(channel: number, param: GeneratorTypes): number {
+		return _module._fluid_synth_get_gen(this._synth, channel, param);
+	}
+	/**
+	 * Set generator value assigned to the MIDI channel.
+	 * @param channel MIDI channel number
+	 * @param param generator ID
+	 * @param value a value related to the generator
+	 */
+	public setGenerator(channel: number, param: GeneratorTypes, value: number) {
+		_module._fluid_synth_set_gen(this._synth, channel, param, value);
+	}
+	/**
+	 * Return the current legato mode of the channel.
+	 * @param channel MIDI channel number
+	 * @return legato mode
+	 */
+	public getLegatoMode(channel: number) {
+		_module._fluid_synth_get_legato_mode(this._synth, channel, this._numPtr);
+		return _module.HEAP32[(this._numPtr as number) >> 2] as LegatoMode;
+	}
+	/**
+	 * Set the current legato mode of the channel.
+	 * @param channel MIDI channel number
+	 * @param mode legato mode
+	 */
+	public setLegatoMode(channel: number, mode: LegatoMode) {
+		_module._fluid_synth_set_legato_mode(this._synth, channel, mode);
+	}
+	/**
+	 * Return the current portamento mode of the channel.
+	 * @param channel MIDI channel number
+	 * @return portamento mode
+	 */
+	public getPortamentoMode(channel: number) {
+		_module._fluid_synth_get_portamento_mode(this._synth, channel, this._numPtr);
+		return _module.HEAP32[(this._numPtr as number) >> 2] as PortamentoMode;
+	}
+	/**
+	 * Set the current portamento mode of the channel.
+	 * @param channel MIDI channel number
+	 * @param mode portamento mode
+	 */
+	public setPortamentoMode(channel: number, mode: PortamentoMode) {
+		_module._fluid_synth_set_portamento_mode(this._synth, channel, mode);
+	}
+	/**
+	 * Return the current breath mode of the channel.
+	 * @param channel MIDI channel number
+	 * @return breath mode (BreathFlags)
+	 */
+	public getBreathMode(channel: number) {
+		_module._fluid_synth_get_breath_mode(this._synth, channel, this._numPtr);
+		return _module.HEAP32[(this._numPtr as number) >> 2] as number;
+	}
+	/**
+	 * Set the current breath mode of the channel.
+	 * @param channel MIDI channel number
+	 * @param flags breath mode flags (BreathFlags)
+	 */
+	public setBreathMode(channel: number, flags: number) {
+		_module._fluid_synth_set_breath_mode(this._synth, channel, flags);
+	}
+
+	////////////////////////////////////////////////////////////////////////////
 
 	public resetPlayer() {
 		return this._initPlayer();
