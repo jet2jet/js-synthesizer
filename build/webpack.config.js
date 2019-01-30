@@ -9,9 +9,6 @@ const packageJson = require('../package.json');
 const LIBRARY_NAME = 'js-synthesizer';
 const LIBRARY_FILENAME = 'js-synthesizer';
 const LIBRARY_NAMESPACE = 'JSSynth';
-const OLD_LIBRARY_NAME = 'fluid-js';
-const OLD_LIBRARY_FILENAME = 'fluid';
-const OLD_LIBRARY_NAMESPACE = 'Fluid';
 const LIBRARY_VERSION = packageJson.version;
 const AUTHOR = packageJson.author;
 
@@ -79,32 +76,6 @@ module.exports = [
 	Object.assign({
 		entry: {
 			[`${LIBRARY_FILENAME}.worklet`]: path.resolve(__dirname, '../src/main/workletEntry.ts')
-		},
-		output: {
-			path: path.resolve(__dirname, '../dist'),
-			filename: `[name]${suffix}.js`
-		},
-	}, webpackConfBase),
-	// old library name (supported for compatibility; will be removed in the future)
-	Object.assign({
-		entry: {
-			[OLD_LIBRARY_FILENAME]: path.resolve(__dirname, '../src/main/index.ts')
-		},
-		output: {
-			path: path.resolve(__dirname, '../dist'),
-			filename: `[name]${suffix}.js`,
-			libraryTarget: 'umd',
-			library: {
-				root: OLD_LIBRARY_NAMESPACE,
-				amd: OLD_LIBRARY_NAMESPACE,
-				commonjs: OLD_LIBRARY_NAME
-			},
-			globalObject: 'this'
-		},
-	}, webpackConfBase),
-	Object.assign({
-		entry: {
-			[`${OLD_LIBRARY_FILENAME}.worklet`]: path.resolve(__dirname, '../src/main/workletEntry.ts')
 		},
 		output: {
 			path: path.resolve(__dirname, '../dist'),
