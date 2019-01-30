@@ -36,22 +36,33 @@ export default function registerAudioWorkletProcessor() {
 
 			const promiseInitialized = this.doInit(settings);
 			this._messaging = initializeReturnPort(this.port, promiseInitialized, () => this.synth!, (data) => {
-				if (data.method === 'init') {
-					this.synth!.init(sampleRate, settings);
-					return true;
-				} else if (data.method === 'createSequencer') {
-					this.doCreateSequencer(data.args[0]).then(() => {
-						postReturn(this._messaging!, data.id, data.method, void (0));
-					});
-					return true;
-				} else if (data.method === 'hookPlayerMIDIEventsByName') {
-					const r = this.doHookPlayerMIDIEvents(data.args[0], data.args[1]);
-					if (r) {
-						postReturn(this._messaging!, data.id, data.method, void (0));
-					} else {
-						postReturnError(this._messaging!, data.id, data.method, new Error('Name not found'));
-					}
-					return true;
+				switch (data.method) {
+					case 'init':
+						this.synth!.init(sampleRate, settings);
+						return true;
+					case 'createSequencer':
+						this.doCreateSequencer(data.args[0]).then(() => {
+							postReturn(this._messaging!, data.id, data.method, void (0));
+						});
+						return true;
+					case 'hookPlayerMIDIEventsByName':
+						{
+							const r = this.doHookPlayerMIDIEvents(data.args[0], data.args[1]);
+							if (r) {
+								postReturn(this._messaging!, data.id, data.method, void (0));
+							} else {
+								postReturnError(this._messaging!, data.id, data.method, new Error('Name not found'));
+							}
+						}
+						return true;
+					case 'callFunction':
+						try {
+							this.doCallFunction(data.args[0], data.args[1]);
+							postReturn(this._messaging!, data.id, data.method, void (0));
+						} catch (e) {
+							postReturnError(this._messaging!, data.id, data.method, e);
+						}
+						return true;
 				}
 				return false;
 			});
@@ -95,6 +106,15 @@ export default function registerAudioWorkletProcessor() {
 				return true;
 			}
 			return false;
+		}
+
+		private doCallFunction(name: string, param: any) {
+			const fn: any = (AudioWorkletGlobalScope[name]);
+			if (fn && typeof fn === 'function') {
+				fn.call(null, this.synth, param);
+				return;
+			}
+			throw new Error('Name not found');
 		}
 
 		private doRegisterSequencerClient(seq: Sequencer, clientName: string, callbackName: string, param: number) {

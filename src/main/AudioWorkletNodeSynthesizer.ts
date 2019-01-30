@@ -275,6 +275,22 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 		return seq.registerSequencerClientByName(clientName, callbackName, param);
 	}
 
+	/**
+	 * Call a function defined in the AudioWorklet.
+	 *
+	 * The function will receive two parameters; the first parameter is a Synthesizer instance
+	 * (not AudioWorkletNodeSynthesizer instance), and the second is the data passed to 'param'.
+	 * This method is useful when the script loaded in AudioWorklet wants to
+	 * retrieve Synthesizer instance.
+	 *
+	 * @param name a function name (must be retrieved from AudioWorkletGlobalScope[name])
+	 * @param param any parameter (must be Transferable)
+	 * @return Promise object that resolves when the function process has done, or rejects when failed
+	 */
+	public callFunction(name: string, param: any) {
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'callFunction', [name, param]);
+	}
+
 	/** @internal */
 	public _getRawSynthesizer(): Promise<number> {
 		return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'getRawSynthesizer', []);
