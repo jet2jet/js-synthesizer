@@ -3,8 +3,6 @@
 js-synthesizer
 ==========
 
-(old package name: `fluid-js`)
-
 js-synthesizer is a library that generates audio data (frames). [WebAssembly (wasm) version of FluidSynth](https://github.com/jet2jet/fluidsynth-emscripten) is used as a core synthesizer engine.
 
 ## Install

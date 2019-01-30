@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.0
+
+- Remove `Fluid` namespace support (breaking change for initial user)
+- Add `callFunction` method to `AudioWorkletNodeSynthesizer`
+- Add some methods to `Synthesizer` such as `setChorus` and `setGenerator` (not add to `AudioWorkletNodeSynthesizer`)
+  - To use those methods from audio worklet, load your script into audio worklet and use `callFunction`
+
 ## v1.4.1
 
 - Fix to send 'unregister' event explicitly before unregistering client from Sequencer, to avoid access violation ('index out of range' error in JS)
