@@ -341,8 +341,8 @@ export default class Synthesizer implements ISynthesizer {
 		this.ensureInitialized();
 		_module._fluid_synth_set_bank_offset(this._synth, id, offset);
 	}
-
-	public render(outBuffer: AudioBuffer | Float32Array[]) {
+	
+	public render(outBuffer: AudioBuffer | Float32Array[] | any) {
 		const frameCount = 'numberOfChannels' in outBuffer ? outBuffer.length : outBuffer[0].length;
 		const channels = 'numberOfChannels' in outBuffer ? outBuffer.numberOfChannels : outBuffer.length;
 		const sizePerChannel = 4 * frameCount;
@@ -362,9 +362,18 @@ export default class Synthesizer implements ISynthesizer {
 		const aLeft = new Float32Array(_module.HEAPU8.buffer, memLeft, frameCount);
 		const aRight = channels >= 2 ? new Float32Array(_module.HEAPU8.buffer, memRight, frameCount) : null;
 		if ('numberOfChannels' in outBuffer) {
-			outBuffer.copyToChannel(aLeft, 0, 0);
-			if (aRight) {
-				outBuffer.copyToChannel(aRight, 1, 0);
+			if ('copyToChannel' in outBuffer) { 
+				outBuffer.copyToChannel(aLeft, 0, 0);
+				if (aRight) {
+					outBuffer.copyToChannel(aRight, 1, 0);
+				}
+			} else { // copyToChannel API not exist in Safari AudioBuffer
+				const leftData = outBuffer.getChannelData(0);
+				aLeft.forEach((val, i)=> leftData[i] = val);
+				if (aRight) {
+					const rightData = outBuffer.getChannelData(1);
+					aRight.forEach((val, i)=> rightData[i] = val);
+				}
 			}
 		} else {
 			outBuffer[0].set(aLeft);
