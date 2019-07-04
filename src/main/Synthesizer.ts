@@ -342,7 +342,7 @@ export default class Synthesizer implements ISynthesizer {
 		_module._fluid_synth_set_bank_offset(this._synth, id, offset);
 	}
 	
-	public render(outBuffer: AudioBuffer | Float32Array[] | any) {
+	public render(outBuffer: AudioBuffer | Float32Array[]) {
 		const frameCount = 'numberOfChannels' in outBuffer ? outBuffer.length : outBuffer[0].length;
 		const channels = 'numberOfChannels' in outBuffer ? outBuffer.numberOfChannels : outBuffer.length;
 		const sizePerChannel = 4 * frameCount;
@@ -362,7 +362,7 @@ export default class Synthesizer implements ISynthesizer {
 		const aLeft = new Float32Array(_module.HEAPU8.buffer, memLeft, frameCount);
 		const aRight = channels >= 2 ? new Float32Array(_module.HEAPU8.buffer, memRight, frameCount) : null;
 		if ('numberOfChannels' in outBuffer) {
-			if ('copyToChannel' in outBuffer) { 
+			if (outBuffer.copyToChannel) {
 				outBuffer.copyToChannel(aLeft, 0, 0);
 				if (aRight) {
 					outBuffer.copyToChannel(aRight, 1, 0);
