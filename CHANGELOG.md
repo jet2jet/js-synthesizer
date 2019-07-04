@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.5.1
+
+- Fix to support iOS Safari that does not support `copyToChannel` on `AudioBuffer` (#2, thanks to @CreadDiscans)
+
 ## v1.5.0
 
 - Remove `Fluid` namespace support (breaking change for initial user)
