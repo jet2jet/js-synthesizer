@@ -52,5 +52,5 @@
     "build:ts": "tsc -p tsconfig.json"
   },
   "types": "./dist/lib/index.d.ts",
-  "version": "1.5.1"
+  "version": "1.5.2"
 }
