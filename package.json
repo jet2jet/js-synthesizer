@@ -22,7 +22,8 @@
     "webpack-cli": "^3.1.2"
   },
   "engines": {
-    "node": ">=6"
+    "node": "10",
+    "npm": ">=6"
   },
   "homepage": "https://github.com/jet2jet/js-synthesizer",
   "keywords": [

@@ -11,5 +11,6 @@
 .gitmodules
 .gitattributes
 .npmignore
+.npmrc
+package-lock.json
 tsconfig.json
-yarn.lock
