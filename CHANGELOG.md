@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.2
+
+(This version has no bug-fixes and feature updates.)
+
+- Update packages and build settings
+
 ## v1.5.1
 
 - Fix to support iOS Safari that does not support `copyToChannel` on `AudioBuffer` (#2, thanks to @CreadDiscans)
