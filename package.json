@@ -1,10 +1,10 @@
 {
   "author": "jet",
   "betterScripts": {
-    "build:dev": {
+    "build:lib:dev": {
       "command": "webpack --config ./build/webpack.config.js"
     },
-    "build:minified": {
+    "build:lib:minified": {
       "command": "webpack --config ./build/webpack.config.js",
       "env": {
         "NODE_ENV": "minified"
@@ -15,11 +15,10 @@
   "description": "Synthesizer library for web-based JS program, using with Web Audio or etc.",
   "devDependencies": {
     "better-npm-run": "^0.1.1",
-    "ts-project-loader": "^0.1.2",
+    "ts-loader": "^6.2.1",
     "typescript": "3.1.4",
-    "uglify-js": "^3.4.9",
-    "webpack": "4.23.1",
-    "webpack-cli": "^3.1.2"
+    "webpack": "4.41.5",
+    "webpack-cli": "^3.3.10"
   },
   "engines": {
     "node": "10",
@@ -46,8 +45,11 @@
     "url": "https://github.com/jet2jet/js-synthesizer.git"
   },
   "scripts": {
-    "build": "better-npm-run build:dev",
-    "build:minified": "better-npm-run build:minified"
+    "build": "npm run build:ts && npm run build:lib:dev",
+    "build:lib:dev": "better-npm-run build:lib:dev",
+    "build:lib:minified": "better-npm-run build:lib:minified",
+    "build:minified": "npm run build:ts && npm run build:lib:minified",
+    "build:ts": "tsc -p tsconfig.json"
   },
   "types": "./dist/lib/index.d.ts",
   "version": "1.5.1"
