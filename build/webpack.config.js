@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const path = require('path');
 
@@ -12,71 +11,10 @@ const LIBRARY_NAMESPACE = 'JSSynth';
 const LIBRARY_VERSION = packageJson.version;
 const AUTHOR = packageJson.author;
 
-const isMinified = process.env.NODE_ENV === 'minified';
-const suffix = isMinified ? '.min' : '';
-
 const headerTextTemplate = fs.readFileSync(path.resolve(__dirname, '../src/banner/header.txt'), 'utf8');
 const preparedHeaderText = prependHeaderTextImpl(
 	LIBRARY_NAME, AUTHOR, LIBRARY_VERSION
 );
-
-const webpackConfBase = {
-	mode: isMinified ? 'production' : 'development',
-	devtool: 'source-map',
-	module: {
-		rules: [
-			{
-				test: /\.tsx?$/,
-				use: [
-					{
-						loader: 'ts-loader'
-					}
-				]
-			}
-		]
-	},
-	optimization: {
-		concatenateModules: true,
-		namedModules: false
-	},
-	plugins: [
-		new webpack.BannerPlugin({
-			banner: preparedHeaderText,
-			raw: true
-		})
-	],
-	resolve: {
-		extensions: ['.tsx', '.ts', '.js']
-	}
-};
-
-module.exports = [
-	Object.assign({
-		entry: {
-			[LIBRARY_FILENAME]: path.resolve(__dirname, '../src/main/index.ts')
-		},
-		output: {
-			path: path.resolve(__dirname, '../dist'),
-			filename: `[name]${suffix}.js`,
-			libraryTarget: 'umd',
-			library: {
-				root: LIBRARY_NAMESPACE,
-				amd: LIBRARY_NAMESPACE,
-				commonjs: LIBRARY_NAME
-			},
-			globalObject: 'this'
-		},
-	}, webpackConfBase),
-	Object.assign({
-		entry: {
-			[`${LIBRARY_FILENAME}.worklet`]: path.resolve(__dirname, '../src/main/workletEntry.ts')
-		},
-		output: {
-			path: path.resolve(__dirname, '../dist'),
-			filename: `[name]${suffix}.js`
-		},
-	}, webpackConfBase)
-];
 
 /**
  * @param {number|string} num numeric data
@@ -93,7 +31,6 @@ function toNumberStringWithZero(num, length) {
 
 function prependHeaderTextImpl(name, author, version) {
 	var date = new Date();
-	var s;
 	return headerTextTemplate
 		.replace('[name]', name)
 		.replace('[author]', author)
@@ -106,3 +43,66 @@ function prependHeaderTextImpl(name, author, version) {
 			toNumberStringWithZero(date.getDate(), 2)
 		);
 }
+
+module.exports = (env) => {
+	const isMinified = !!(env && env.minified);
+	const suffix = isMinified ? '.min' : '';
+
+	const webpackConfBase = {
+		mode: isMinified ? 'production' : 'development',
+		devtool: 'source-map',
+		module: {
+			rules: [
+				{
+					test: /\.tsx?$/,
+					use: [
+						{
+							loader: 'ts-loader'
+						}
+					]
+				}
+			]
+		},
+		optimization: {
+			concatenateModules: true,
+			namedModules: false
+		},
+		plugins: [
+			new webpack.BannerPlugin({
+				banner: preparedHeaderText,
+				raw: true
+			})
+		],
+		resolve: {
+			extensions: ['.tsx', '.ts', '.js']
+		}
+	};
+
+	return [
+		Object.assign({
+			entry: {
+				[LIBRARY_FILENAME]: path.resolve(__dirname, '../src/main/index.ts')
+			},
+			output: {
+				path: path.resolve(__dirname, '../dist'),
+				filename: `[name]${suffix}.js`,
+				libraryTarget: 'umd',
+				library: {
+					root: LIBRARY_NAMESPACE,
+					amd: LIBRARY_NAMESPACE,
+					commonjs: LIBRARY_NAME
+				},
+				globalObject: 'this'
+			},
+		}, webpackConfBase),
+		Object.assign({
+			entry: {
+				[`${LIBRARY_FILENAME}.worklet`]: path.resolve(__dirname, '../src/main/workletEntry.ts')
+			},
+			output: {
+				path: path.resolve(__dirname, '../dist'),
+				filename: `[name]${suffix}.js`
+			},
+		}, webpackConfBase)
+	];
+};
