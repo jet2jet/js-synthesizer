@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.6.0
+
+(This version has no feature updates but the minor version is updated due to updating engine version.)
+
+- Fix required engine version (#4)
+- Update packages and build settings
+
 ## v1.5.2
 
 (This version has no bug-fixes and feature updates.)
