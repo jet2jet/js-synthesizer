@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.7.0
+
+(This version has no feature updates but the minor version is updated due to change default behavior.)
+
+- Fix to initialize gain value
+- Patch for retrieving active voice count (`isPlaying()` should work correctly now)
+- Update libfluidsynth.js
+  - Note that js-synthesizer still work with libfluidsynth-2.0.2.js.
+
 ## v1.6.0
 
 (This version has no feature updates but the minor version is updated due to updating engine version.)
