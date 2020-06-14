@@ -15,10 +15,10 @@ npm install --save js-synthesizer
 
 ### From main thread
 
-Copies `dist/js-synthesizer.js` (or `dist/js-synthesizer.min.js`) and `externals/libfluidsynth-2.0.2.js` (libfluidsynth JS file) to your project, and writes `<script>` tags as following order:
+Copies `dist/js-synthesizer.js` (or `dist/js-synthesizer.min.js`) and `externals/libfluidsynth-2.1.3.js` (libfluidsynth JS file) to your project, and writes `<script>` tags as following order:
 
 ```html
-<script src="libfluidsynth-2.0.2.js"></script>
+<script src="libfluidsynth-2.1.3.js"></script>
 <script src="js-synthesizer.js"></script>
 ```
 
@@ -73,7 +73,7 @@ js-synthesizer supports AudioWorklet process via `dist/js-synthesizer.worklet.js
 
 ```js
 var context = new AudioContext();
-context.audioWorklet.addModule('libfluidsynth-2.0.2.js')
+context.audioWorklet.addModule('libfluidsynth-2.1.3.js')
     .then(function () {
         return context.audioWorklet.addModule('js-synthesizer.worklet.js');
     })
@@ -104,7 +104,7 @@ js-synthesizer and libfluidsynth can be executed on a Web Worker. Executing on a
 To use js-synthesizer on a Web Worker, simply call `importScripts` as followings:
 
 ```js
-self.importScripts('libfluidsynth-2.0.2.js');
+self.importScripts('libfluidsynth-2.1.3.js');
 self.importScripts('js-synthesizer.js');
 ```
 
