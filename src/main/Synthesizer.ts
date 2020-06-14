@@ -247,7 +247,7 @@ export default class Synthesizer implements ISynthesizer {
 			setNumValueForSettings(set, 'synth.reverb.room-size', settings.reverbRoomSize);
 			setNumValueForSettings(set, 'synth.reverb.width', settings.reverbWidth);
 		}
-		fluid_settings_setint(set, 'synth.gain', this._gain);
+		fluid_settings_setnum(set, 'synth.gain', this._gain);
 
 		this._synth = _module._new_fluid_synth(this._settings);
 
