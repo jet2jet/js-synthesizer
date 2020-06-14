@@ -106,6 +106,72 @@ function setStrValueForSettings(settings: SettingsId, name: string, value: strin
 	}
 }
 
+function getActiveVoiceCount(synth: SynthId): number {
+	const actualCount = _module._fluid_synth_get_active_voice_count(synth);
+	if (!actualCount) {
+		return 0;
+	}
+
+	// FluidSynth may return incorrect value for active voice count,
+	// so check internal data and correct it
+
+	// check if the structure is not changed
+	// 144 === offset [synth->active_voice_count]
+	const offsetOfActiveVoiceCount = (synth + 144) >> 2;
+	const structActiveVoiceCount = _module.HEAPU32[offsetOfActiveVoiceCount];
+	if (structActiveVoiceCount !== actualCount) {
+		// unknown structure
+		const c = console;
+		c.warn(
+			'js-synthesizer: cannot check synthesizer internal data (may be changed)'
+		);
+		return actualCount;
+	}
+
+	// 140 === offset [synth->voice]
+	const voiceList = _module.HEAPU32[(synth + 140) >> 2];
+	// (voice should not be NULL)
+	if (!voiceList || voiceList >= _module.HEAPU32.byteLength) {
+		// unknown structure
+		const c = console;
+		c.warn(
+			'js-synthesizer: cannot check synthesizer internal data (may be changed)'
+		);
+		return actualCount;
+	}
+
+	// count of internal voice data is restricted to polyphony value
+	const voiceCount = _module._fluid_synth_get_polyphony(synth);
+	let isRunning = false;
+	for (let i = 0; i < voiceCount; ++i) {
+		// auto voice = voiceList[i]
+		const voice = _module.HEAPU32[(voiceList >> 2) + i];
+		if (!voice) {
+			continue;
+		}
+		// offset [voice->status]
+		const status = _module.HEAPU8[voice + 4];
+		// 4: FLUID_VOICE_OFF
+		if (status !== 4) {
+			isRunning = true;
+			break;
+		}
+	}
+	if (!isRunning) {
+		if (structActiveVoiceCount !== 0) {
+			const c = console;
+			c.warn(
+				'js-synthesizer: Active voice count is not zero, but all voices are off:',
+				structActiveVoiceCount,
+			);
+		}
+		_module.HEAPU32[offsetOfActiveVoiceCount] = 0;
+		return 0;
+	}
+
+	return actualCount;
+}
+
 function makeRandomFileName(type: string, ext: string) {
 	return `/${type}-r${Math.random() * 65535}-${Math.random() * 65535}${ext}`;
 }
@@ -271,7 +337,7 @@ export default class Synthesizer implements ISynthesizer {
 
 	public isPlaying() {
 		return this._synth !== INVALID_POINTER &&
-			_module._fluid_synth_get_active_voice_count(this._synth) > 0;
+			getActiveVoiceCount(this._synth) > 0;
 	}
 
 	public setInterpolation(value: InterpolationValues, channel?: number) {
