@@ -22,7 +22,27 @@ Copies `dist/js-synthesizer.js` (or `dist/js-synthesizer.min.js`) and `externals
 <script src="js-synthesizer.js"></script>
 ```
 
-When scripts are available, you can use APIs via `JSSynth` namespace object.
+When scripts are available, please check whether `Module.calledRun` is true.
+If not true, wait until it becomes true.
+
+> If you are not using the synthesizer in AudioWorklet, you can use `addOnPostRun` function to wait for initialization.
+
+```js
+if (Module.calledRun) {
+    // already initialized, so simply call loadSynthesizer
+    loadSynthesizer();
+} else {
+    // loadSynthesizer will be called when the initialization process is done
+    // (addOnPostRun is defined in libfluidsynth script)
+    addOnPostRun(loadSynthesizer);
+}
+
+function loadSynthesizer() {
+    // process with JSSynth...
+}
+```
+
+When initialized, you can use APIs via `JSSynth` namespace object.
 
 ```js
 // Prepare the AudioContext instance
