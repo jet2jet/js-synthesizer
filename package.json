@@ -9,7 +9,7 @@
     "webpack-cli": "^3.3.11"
   },
   "engines": {
-    "node": ">=10",
+    "node": ">=14",
     "npm": ">=6"
   },
   "homepage": "https://github.com/jet2jet/js-synthesizer",
