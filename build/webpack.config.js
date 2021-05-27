@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const webpack = require('webpack');
+const TerserPlugin = require("terser-webpack-plugin");
 
 const packageJson = require('../package.json');
 
@@ -65,7 +66,12 @@ module.exports = (env) => {
 		},
 		optimization: {
 			concatenateModules: true,
-			namedModules: false
+			minimize: isMinified,
+			minimizer: isMinified ? [
+				new TerserPlugin({
+					extractComments: false,
+				})
+			] : []
 		},
 		plugins: [
 			new webpack.BannerPlugin({

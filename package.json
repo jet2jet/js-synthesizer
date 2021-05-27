@@ -3,10 +3,10 @@
   "dependencies": {},
   "description": "Synthesizer library for web-based JS program, using with Web Audio or etc.",
   "devDependencies": {
-    "ts-loader": "^7.0.0",
-    "typescript": "3.1.4",
-    "webpack": "~4.42.1",
-    "webpack-cli": "^3.3.11"
+    "ts-loader": "^9.2.2",
+    "typescript": "^4.2.4",
+    "webpack": "^5.37.1",
+    "webpack-cli": "^4.7.0"
   },
   "engines": {
     "node": ">=14",
@@ -35,7 +35,7 @@
   "scripts": {
     "build": "npm run build:ts && npm run build:lib:dev",
     "build:lib:dev": "webpack --config ./build/webpack.config.js",
-    "build:lib:minified": "webpack --config ./build/webpack.config.js --env.minified",
+    "build:lib:minified": "webpack --config ./build/webpack.config.js --env minified",
     "build:minified": "npm run build:ts && npm run build:lib:minified",
     "build:ts": "tsc -p tsconfig.json"
   },

@@ -39,7 +39,7 @@ let _fs: any;
 let fluid_settings_setint: (settings: SettingsId, name: string, val: number) => number;
 let fluid_settings_setnum: (settings: SettingsId, name: string, val: number) => number;
 let fluid_settings_setstr: (settings: SettingsId, name: string, str: string) => number;
-let fluid_synth_error: (synth: SynthId) => string;
+let fluid_synth_error: undefined | ((synth: SynthId) => string);
 let fluid_synth_sfload: (synth: SynthId, filename: string, reset_presets: number) => number;
 let fluid_sequencer_register_client: (seq: PointerType, name: string, callback: number, data: number) => number;
 
@@ -378,7 +378,7 @@ export default class Synthesizer implements ISynthesizer {
 		const sfont = fluid_synth_sfload(this._synth, name, 1);
 		_fs.unlink(name);
 		return sfont === -1 ?
-			Promise.reject(new Error(fluid_synth_error(this._synth))) :
+			Promise.reject(new Error(fluid_synth_error!(this._synth))) :
 			Promise.resolve(sfont);
 	}
 
@@ -777,7 +777,7 @@ export default class Synthesizer implements ISynthesizer {
 		_module.HEAPU8.set(new Uint8Array(bin), mem);
 		const r: number = _module._fluid_player_add_mem(this._player, mem, len);
 		free(mem);
-		return r !== -1 ? Promise.resolve() : Promise.reject(new Error(fluid_synth_error(this._synth)));
+		return r !== -1 ? Promise.resolve() : Promise.reject(new Error(fluid_synth_error!(this._synth)));
 	}
 
 	public playPlayer() {
@@ -787,7 +787,7 @@ export default class Synthesizer implements ISynthesizer {
 		}
 
 		if (_module._fluid_player_play(this._player) === -1) {
-			return Promise.reject(new Error(fluid_synth_error(this._synth)));
+			return Promise.reject(new Error(fluid_synth_error!(this._synth)));
 		}
 		this._playerPlaying = true;
 		let resolver = () => { };
