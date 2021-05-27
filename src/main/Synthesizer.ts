@@ -368,11 +368,16 @@ export default class Synthesizer implements ISynthesizer {
 		return this.flushFramesAsync();
 	}
 
-	public loadSFont(bin: ArrayBuffer) {
+	public loadSFont(bin: ArrayBuffer | Uint8Array) {
 		this.ensureInitialized();
 
 		const name = makeRandomFileName('sfont', '.sf2');
-		const ub = new Uint8Array(bin);
+		let ub;
+		if(bin.constructor.name === 'Uint8Array'){
+			ub = bin;
+		}else{
+			ub = new Uint8Array(bin);
+		}
 
 		_fs.writeFile(name, ub);
 		const sfont = fluid_synth_sfload(this._synth, name, 1);
