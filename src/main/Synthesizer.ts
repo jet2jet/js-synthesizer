@@ -116,20 +116,32 @@ function getActiveVoiceCount(synth: SynthId): number {
 	// so check internal data and correct it
 
 	// check if the structure is not changed
-	// 144 === offset [synth->active_voice_count]
-	const offsetOfActiveVoiceCount = (synth + 144) >> 2;
-	const structActiveVoiceCount = _module.HEAPU32[offsetOfActiveVoiceCount];
+	// for fluidsynth 2.0.x-2.1.x:
+	//   140 === offset [synth->voice]
+	//   144 === offset [synth->active_voice_count] for 
+	// for fluidsynth 2.2.x:
+	//   144 === offset [synth->voice]
+	//   148 === offset [synth->active_voice_count]
+	// first check 2.1.x structure
+	let baseOffsetOfVoice = 140;
+	let offsetOfActiveVoiceCount = (synth + baseOffsetOfVoice + 4) >> 2;
+	let structActiveVoiceCount = _module.HEAPU32[offsetOfActiveVoiceCount];
 	if (structActiveVoiceCount !== actualCount) {
-		// unknown structure
-		const c = console;
-		c.warn(
-			'js-synthesizer: cannot check synthesizer internal data (may be changed)'
-		);
-		return actualCount;
+		// add 4 for 2.2.x
+		baseOffsetOfVoice += 4;
+		offsetOfActiveVoiceCount = (synth + baseOffsetOfVoice + 4) >> 2;
+		structActiveVoiceCount = _module.HEAPU32[offsetOfActiveVoiceCount];
+		if (structActiveVoiceCount !== actualCount) {
+			// unknown structure
+			const c = console;
+			c.warn(
+				'js-synthesizer: cannot check synthesizer internal data (may be changed)'
+			);
+			return actualCount;
+		}
 	}
 
-	// 140 === offset [synth->voice]
-	const voiceList = _module.HEAPU32[(synth + 140) >> 2];
+	const voiceList = _module.HEAPU32[(synth + baseOffsetOfVoice) >> 2];
 	// (voice should not be NULL)
 	if (!voiceList || voiceList >= _module.HEAPU32.byteLength) {
 		// unknown structure
