@@ -18,6 +18,7 @@ import MIDIEvent, { MIDIEventType } from './MIDIEvent';
 import Sequencer from './Sequencer';
 import SequencerEvent, { EventType as SequencerEventType } from './SequencerEvent';
 import SequencerEventData from './SequencerEventData';
+import Soundfont from './Soundfont';
 
 /** @internal */
 declare global {
@@ -409,6 +410,10 @@ export default class Synthesizer implements ISynthesizer {
 		return this.flushFramesAsync().then(() => {
 			_module._fluid_synth_sfunload(this._synth, id, 1);
 		});
+	}
+
+	public getSFontObject(sfontId: number): Soundfont | null {
+		return Soundfont.getSoundfontById(this, sfontId);
 	}
 
 	public getSFontBankOffset(id: number) {
