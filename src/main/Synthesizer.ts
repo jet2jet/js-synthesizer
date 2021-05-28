@@ -25,6 +25,7 @@ declare global {
 	var Module: any;
 	function addFunction(func: Function, sig: string): number;
 	function removeFunction(funcPtr: number): void;
+	function addOnPostRun(cb: (Module: any) => void): void;
 }
 
 type SettingsId = UniquePointerType<'settings_id'>;
@@ -84,6 +85,34 @@ function bindFunctions() {
 	free = _module._free.bind(_module);
 
 	defaultMIDIEventCallback = _module._fluid_synth_handle_midi_event.bind(_module);
+}
+
+let promiseWaitForInitialized: Promise<void> | undefined;
+function waitForInitialized() {
+	if (promiseWaitForInitialized) {
+		return promiseWaitForInitialized;
+	}
+
+	let mod: any;
+	let addOnPostRunFn: ((cb: (Module: any) => void) => void) | undefined;
+	if (typeof AudioWorkletGlobalScope !== 'undefined') {
+		mod = AudioWorkletGlobalScope.wasmModule;
+		addOnPostRunFn = AudioWorkletGlobalScope.addOnPostRun;
+	} else {
+		mod = Module;
+		addOnPostRunFn = typeof addOnPostRun !== 'undefined' ? addOnPostRun : undefined;
+	}
+	if (mod.calledRun) {
+		promiseWaitForInitialized = Promise.resolve();
+		return promiseWaitForInitialized;
+	}
+	if (typeof addOnPostRunFn === 'undefined') {
+		throw new Error('Waiting for initialization is not supported. Please update libfluidsynth.js');
+	}
+	promiseWaitForInitialized = new Promise((resolve) => {
+		addOnPostRunFn!(resolve);
+	});
+	return promiseWaitForInitialized;
 }
 
 function setBoolValueForSettings(settings: SettingsId, name: string, value: boolean | undefined) {
@@ -270,6 +299,11 @@ export default class Synthesizer implements ISynthesizer {
 		this._numPtr = INVALID_POINTER;
 
 		this._gain = SynthesizerDefaultValues.Gain;
+	}
+
+	/** Return the promise object that resolves when WebAssembly has been initialized */
+	public static waitForWasmInitialized(): Promise<void> {
+		return waitForInitialized();
 	}
 
 	public isInitialized() {
