@@ -88,17 +88,17 @@ export default function registerAudioWorkletProcessor() {
 
 		private doCreateSequencer(port: MessagePort): Promise<void> {
 			return Synthesizer.createSequencer().then((seq) => {
-				initializeReturnPort(port, null, () => seq, (data) => {
+				const messaging = initializeReturnPort(port, null, () => seq, (data) => {
 					// special handle for Sequencer
 					if (data.method === 'getRaw') {
-						postReturn(this._messaging!, data.id, data.method, (seq as Sequencer).getRaw());
+						postReturn(messaging, data.id, data.method, (seq as Sequencer).getRaw());
 						return true;
 					} else if (data.method === 'registerSequencerClientByName') {
 						const r = this.doRegisterSequencerClient(seq as Sequencer, data.args[0], data.args[1], data.args[2]);
 						if (r !== null) {
-							postReturn(this._messaging!, data.id, data.method, r);
+							postReturn(messaging, data.id, data.method, r);
 						} else {
-							postReturnError(this._messaging!, data.id, data.method, new Error('Name not found'));
+							postReturnError(messaging, data.id, data.method, new Error('Name not found'));
 						}
 						return true;
 					}
