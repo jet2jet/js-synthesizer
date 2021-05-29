@@ -107,11 +107,20 @@ function waitForInitialized() {
 		return promiseWaitForInitialized;
 	}
 	if (typeof addOnPostRunFn === 'undefined') {
-		throw new Error('Waiting for initialization is not supported. Please update libfluidsynth.js');
+		promiseWaitForInitialized = new Promise((resolve) => {
+			const fn: (() => void) | undefined = _module.onRuntimeInitialized;
+			_module.onRuntimeInitialized = () => {
+				resolve();
+				if (fn) {
+					fn();
+				}
+			};
+		});
+	} else {
+		promiseWaitForInitialized = new Promise((resolve) => {
+			addOnPostRunFn!(resolve);
+		});
 	}
-	promiseWaitForInitialized = new Promise((resolve) => {
-		addOnPostRunFn!(resolve);
-	});
 	return promiseWaitForInitialized;
 }
 
