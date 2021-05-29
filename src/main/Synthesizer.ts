@@ -455,6 +455,11 @@ export default class Synthesizer implements ISynthesizer {
 		});
 	}
 
+	/**
+	 * Returns the `Soundfont` instance for specified SoundFont.
+	 * @param sfontId loaded SoundFont id ({@link loadSFont} returns this)
+	 * @return `Soundfont` instance or `null` if `sfontId` is not valid or loaded
+	 */
 	public getSFontObject(sfontId: number): Soundfont | null {
 		return Soundfont.getSoundfontById(this, sfontId);
 	}

@@ -13,6 +13,7 @@ declare global {
 let _module: any;
 
 let fluid_sfont_get_name: (sfont: SFontPointer) => string;
+let fluid_preset_get_name: (preset: PresetPointer) => string;
 
 function bindFunctions() {
 	if (_module) {
@@ -27,6 +28,8 @@ function bindFunctions() {
 
 	fluid_sfont_get_name =
 		_module.cwrap('fluid_sfont_get_name', 'string', ['number']);
+	fluid_preset_get_name =
+		_module.cwrap('fluid_preset_get_name', 'string', ['number']);
 }
 
 export default class Soundfont {
@@ -56,7 +59,15 @@ export default class Soundfont {
 		if (presetPtr === INVALID_POINTER) {
 			return null;
 		}
-		return new Preset(presetPtr);
+		const name = fluid_preset_get_name(presetPtr);
+		const bankNum = _module._fluid_preset_get_banknum(presetPtr);
+		const num = _module._fluid_preset_get_num(presetPtr);
+		return {
+			soundfont: this,
+			name,
+			bankNum,
+			num
+		};
 	}
 
 	public getPresetIterable(): Iterable<Preset> {
@@ -71,9 +82,17 @@ export default class Soundfont {
 					value: undefined
 				};
 			} else {
+				const name = fluid_preset_get_name(presetPtr);
+				const bankNum = _module._fluid_preset_get_banknum(presetPtr);
+				const num = _module._fluid_preset_get_num(presetPtr);
 				return {
 					done: false,
-					value: new Preset(presetPtr)
+					value: {
+						soundfont: this,
+						name,
+						bankNum,
+						num
+					}
 				};
 			}
 		};

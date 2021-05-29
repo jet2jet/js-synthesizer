@@ -63,6 +63,18 @@ export default function registerAudioWorkletProcessor() {
 							postReturnError(this._messaging!, data.id, data.method, e);
 						}
 						return true;
+					case 'getSFontObject':
+						try {
+							const name = this.doGetSFontObject(data.args[0], data.args[1]);
+							if (name !== null) {
+								postReturn(this._messaging!, data.id, data.method, name);
+							} else {
+								postReturnError(this._messaging!, data.id, data.method, new Error('Invalid sfontId'));
+							}
+						} catch (e) {
+							postReturnError(this._messaging!, data.id, data.method, e);
+						}
+						return true;
 				}
 				return false;
 			});
@@ -93,6 +105,21 @@ export default function registerAudioWorkletProcessor() {
 					return false;
 				});
 			});
+		}
+
+		private doGetSFontObject(port: MessagePort, sfontId: number): string | null {
+			const sfont = this.synth!.getSFontObject(sfontId);
+			if (sfont === null) {
+				return null;
+			}
+			const messaging = initializeReturnPort(port, null, () => sfont, (data) => {
+				if (data.method === 'getPresetIterable') {
+					postReturn(messaging, data.id, data.method, [...sfont.getPresetIterable()]);
+					return true;
+				}
+				return false;
+			});
+			return sfont.getName();
 		}
 
 		private doHookPlayerMIDIEvents(name: string | null | undefined, param: any) {

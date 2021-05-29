@@ -131,9 +131,13 @@ export function postCallWithPromise<T>(instance: CallMessageInstance, method: st
 	const promise = new Promise<T>((resolve, reject) => {
 		instance.defers[id] = { resolve, reject };
 	});
+	const transfers: Transferable[] = [];
+	if (args[0] instanceof MessagePort) {
+		transfers.push(args[0]);
+	}
 	instance.port.postMessage({
 		id, method, args
-	} as MethodCallEventData);
+	} as MethodCallEventData, transfers);
 	return promise;
 }
 

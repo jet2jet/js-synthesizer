@@ -3,6 +3,7 @@ import { SynthesizerDefaultValues, InterpolationValues } from './Constants';
 import ISequencer from './ISequencer';
 import ISynthesizer from './ISynthesizer';
 import SynthesizerSettings from './SynthesizerSettings';
+import WorkletSoundfont from './WorkletSoundfont';
 
 import WorkletSequencer from './WorkletSequencer';
 
@@ -122,6 +123,18 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 
 	public unloadSFontAsync(id: number) {
 		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'unloadSFont', [id]);
+	}
+
+	/**
+	 * Returns the `Soundfont` instance for specified SoundFont.
+	 * @param sfontId loaded SoundFont id ({@link loadSFont} returns this)
+	 * @return resolve with `Soundfont` instance (rejected if `sfontId` is not valid or loaded)
+	 */
+	public getSFontObject(sfontId: number): Promise<WorkletSoundfont> {
+		const channel = new MessageChannel();
+		return MethodMessaging.postCallWithPromise<string>(this._messaging!, 'getSFontObject', [channel.port2, sfontId]).then((name) => {
+			return new WorkletSoundfont(channel.port1, name);
+		});
 	}
 
 	public getSFontBankOffset(id: number) {
