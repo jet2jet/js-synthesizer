@@ -11,6 +11,7 @@ import {
 
 import {
 	initializeReturnPort,
+	MethodCallEventData,
 	postReturn,
 	postReturnError,
     ReturnMessageInstance
@@ -75,6 +76,9 @@ export default function registerAudioWorkletProcessor() {
 							postReturnError(this._messaging!, data.id, data.method, e);
 						}
 						return true;
+					case 'playPlayer':
+						this.doPlayPlayer(data);
+						return true;
 				}
 				return false;
 			});
@@ -120,6 +124,19 @@ export default function registerAudioWorkletProcessor() {
 				return false;
 			});
 			return sfont.getName();
+		}
+
+		private doPlayPlayer(data: MethodCallEventData) {
+			const syn = this.synth!;
+			syn.playPlayer().then(() => {
+				postReturn(this._messaging, -1, Constants.UpdateStatus, {
+					playing: syn.isPlaying(),
+					playerPlaying: syn.isPlayerPlaying()
+				} as SynthesizerStatus);
+				postReturn(this._messaging!, data.id, data.method, void (0));
+			}, (e: unknown) => {
+				postReturnError(this._messaging!, data.id, data.method, e);
+			})
 		}
 
 		private doHookPlayerMIDIEvents(name: string | null | undefined, param: any) {

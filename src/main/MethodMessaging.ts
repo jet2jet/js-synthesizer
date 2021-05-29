@@ -1,20 +1,20 @@
 
 import MessageError from './MessageError';
 
-interface MethodCallEventData {
+export interface MethodCallEventData {
 	id: number;
 	method: string;
 	args: any[];
 }
 
-interface MethodReturnEventData {
+export interface MethodReturnEventData {
 	id: number;
 	method: string;
 	val: any;
 	error?: MessageErrorData;
 }
 
-interface MessageErrorData {
+export interface MessageErrorData {
 	baseName: string;
 	message: string;
 	detail: any;
