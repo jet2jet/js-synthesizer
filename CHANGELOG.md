@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.8.2
+
+- Downgrade Node.js version to v12
+
 ## v1.8.1
 
 - Fixed to initialize player on first player method calls
