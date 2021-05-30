@@ -193,6 +193,17 @@ export default interface ISynthesizer {
 	 */
 	resetPlayer(): Promise<void>;
 	/**
+	 * Closes the player.
+	 *
+	 * The player is initialized automatically when player methods
+	 * such as `addSMFDataToPlayer` and `playPlayer` are called,
+	 * but not closed automatically. When the player is available,
+	 * and its status is not playing, the sound will always be turned off
+	 * (this is FluidSynth behavior), so if you want to avoid this,
+	 * call this method explicitly after using the player.
+	 */
+	closePlayer(): void;
+	/**
 	 * Return whether the player is processing files.
 	 * Note that this method returns false even if some voices are still active (please check isPlaying()).
 	 * You can call this method even if not initialized.

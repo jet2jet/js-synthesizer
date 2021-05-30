@@ -208,6 +208,10 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'resetPlayer', []);
 	}
 
+	public closePlayer() {
+		MethodMessaging.postCall(this._messaging!, 'closePlayer', []);
+	}
+
 	public isPlayerPlaying() {
 		return this._status.playerPlaying;
 	}

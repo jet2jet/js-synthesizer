@@ -374,8 +374,6 @@ export default class Synthesizer implements ISynthesizer {
 		this._synth = _module._new_fluid_synth(this._settings);
 
 		this._numPtr = malloc(8);
-
-		this._initPlayer();
 	}
 
 	public close() {
@@ -787,7 +785,14 @@ export default class Synthesizer implements ISynthesizer {
 	////////////////////////////////////////////////////////////////////////////
 
 	public resetPlayer() {
-		return this._initPlayer();
+		return new Promise<void>((resolve) => {
+			this._initPlayer();
+			resolve();
+		});
+	}
+
+	public closePlayer() {
+		this._closePlayer();
 	}
 
 	/** @internal */
@@ -807,9 +812,9 @@ export default class Synthesizer implements ISynthesizer {
 					this._fluidSynthCallback = funcPtr;
 				}
 			}
+		} else {
+			throw new Error('Out of memory');
 		}
-		return player !== INVALID_POINTER ? Promise.resolve() :
-			Promise.reject(new Error('Out of memory'));
 	}
 
 	/** @internal */
@@ -951,7 +956,7 @@ export default class Synthesizer implements ISynthesizer {
 	private ensurePlayerInitialized() {
 		this.ensureInitialized();
 		if (this._player === INVALID_POINTER) {
-			throw new Error('Player is not initialized');
+			this._initPlayer();
 		}
 	}
 
