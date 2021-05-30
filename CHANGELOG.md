@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.8.1
+
+- Fixed to initialize player on first player method calls
+   - Add `closePlayer` method to release internal player instance
+- Bundle libfluidsynth-2.2.1.js (and remove libfluidsynth-2.0.2.js)
+
 ## v1.8.0
 
 - Add `waitForWasmInitialized` to wait for WebAssembly initialization (#13)
