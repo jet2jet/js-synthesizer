@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.8.0
+
+- Add `waitForWasmInitialized` to wait for WebAssembly initialization (#13)
+- Add Soundfont object to read loaded soundfont information (including presets defined in the soundfont) (#14)
+- Fix AudioWorkletNodeSynthesizer playPlayer to wait for internal playPlayer done (related: #16)
+- Fix messaging usage on Sequence for AudioWorklet
+- Add support for libfluidsynth 2.2.x
+- Bundle libfluidsynth-2.1.9.js
+
 ## v1.7.0
 
 (This version has no feature updates but the minor version is updated due to change default behavior.)
