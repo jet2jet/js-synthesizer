@@ -5,6 +5,10 @@ js-synthesizer
 
 js-synthesizer is a library that generates audio data (frames). [WebAssembly (wasm) version of FluidSynth](https://github.com/jet2jet/fluidsynth-emscripten) is used as a core synthesizer engine.
 
+## Demo
+
+https://www.pg-fl.jp/music/js-synthesizer/index.en.htm
+
 ## Install
 
 ```
@@ -32,7 +36,7 @@ function loadSynthesizer() {
 }
 ```
 
-When initialized, you can use APIs via `JSSynth` namespace object.
+After initialized, you can use APIs via `JSSynth` namespace object.
 
 ```js
 // Prepare the AudioContext instance
@@ -69,13 +73,13 @@ synth.loadSFont(sfontBuffer).then(function () {
 
 (Above example uses Web Audio API, but you can use `Synthesizer` without Web Audio, by using `render()` method.)
 
-If you prefer to load js-synthesizer as an ES module, you can use `import` statement such as `import * as JSSynth from 'js-synthesizer'`.
+js-synthesizer is built as UMD module. If you prefer to load js-synthesizer as a CommonJS / ES module, you can use `import` statement such as `import * as JSSynth from 'js-synthesizer'` by using bundlers (such as webpack).
 
 Notes:
 
 * `js-synthesizer.js` intends the ES2015-supported environment. If you need to run the script without errors on non-ES2015 environment such as IE11 (to notify 'unsupported'), you should load those scripts dynamically, or use transpiler such as babel.
-* When just after the scripts loaded, some APIs may fail since libfluidsynth is not ready. To avoid this, you can use the Promise object returned by `JSSynth.waitForReady`.
-* libfluidsynth JS file is not `import`-able and its license (LGPL v2.1) is differ from js-synthesizer's (BSD-3-Clause).
+* When just after the scripts loaded, some APIs may fail since libfluidsynth is not ready. To avoid this, you can use the Promise object returned by `JSSynth.waitForReady` as above example.
+* libfluidsynth JS file is not `import`-able and its license (LGPL v2.1) is different from js-synthesizer's (BSD-3-Clause).
 
 ### With AudioWorklet
 
@@ -118,14 +122,12 @@ self.importScripts('libfluidsynth-2.1.3.js');
 self.importScripts('js-synthesizer.js');
 ```
 
-(You can also load js-synthesizer as an ES Module from the Web Worker.)
-
 Note that since the Web Audio is not supported on the Web Worker, the APIs/methods related to the Web Audio will not work. If you want to use both Web Worker and AudioWorklet, you should implement AudioWorkletProcessor manually as followings:
 
 * main thread -- create AudioWorkletNode and establish connections between Web Worker and AudioWorklet
-    * You must transfer rendered audio frames from Web Worker to AudioWorklet because AudioWorklet environment does not support creating Web Worker. By creating `MessageChannel` and sending its port instances to Web Worker and AudioWorklet, they can communicate each other directly.
+    * You need to transfer rendered audio frames from Web Worker to AudioWorklet, but AudioWorklet environment does not support creating Web Worker. By creating `MessageChannel` and sending its port instances to Web Worker and AudioWorklet, they can communicate each other directly.
 * Web Worker thread -- render audio frames into raw buffers and send it for AudioWorklet thread
-* AudioWorklet thread -- receive audio frames and 'render' it in the `process` method
+* AudioWorklet thread -- receive audio frames (and queue) and 'render' it in the `process` method
 
 ## API
 
@@ -137,7 +139,7 @@ These classes implement the interface named `JSSynth.ISynthesizer`.
     * Creates the general synthesizer instance. No parameters are available.
 * `JSSynth.AudioWorkletNodeSynthesizer` (construct: `new JSSynth.AudioWorkletNodeSynthesizer()`)
     * Creates the synthesizer instance communicating AudioWorklet (see above). No parameters are available.
-    * You must call `createAudioNode` method to use other instance methods.
+    * You must call `createAudioNode` method first to use other instance methods.
 
 ### Creation of Sequencer instance
 
@@ -150,9 +152,7 @@ The `Sequencer` instance is created only via following methods:
 
 ### Using hook / handle MIDI-related event data with user-defined calllback
 
-NOTE: `libfluidsynth-2.0.2.js` (or above) is necessary to use this feature.
-
-From v1.2.0, you can hook MIDI events posted by player. For `JSSynth.Synthesizer` instance, use `hookPlayerMIDIEvents` method as followings:
+You can hook MIDI events posted by player. For `JSSynth.Synthesizer` instance, use `hookPlayerMIDIEvents` method as followings:
 
 ```js
 syn.hookPlayerMIDIEvents(function (s, type, event) {
@@ -201,11 +201,11 @@ syn.hookPlayerMIDIEventsByName('myHookPlayerEvents', { secondSFont: secondSFont 
 The sequencer also supports 'user-defined client' to handle event data.
 
 * For sequncer instance created by `Synthesizer.createSequencer`, use `Synthesizer.registerSequencerClient` static method.
-    * You can use `Synthesizer.sendEventNow` static method to event data processed by the synthesizer or another clients.
+    * You can use `Synthesizer.sendEventNow` static method to send event data, processed by the synthesizer or clients, to another clients/synthesizers.
 * For sequncer instance created by `createSequencer` of `AudioWorkletNodeSynthesizer`, use `registerSequencerClientByName` instance method.
     * The callback function must be added to 'AudioWorkletGlobalScope' like `hookPlayerMIDIEventsByName`'s callback.
     * To re-send event data, use `Synthesizer.sendEventNow` in the worklet. `Synthesizer` constructor is available via `AudioWorkletGlobalScope.JSSynth.Synthesizer`.
-* You can rewrite event data passed to the callback, with using `JSSynth.rewriteEventData` (`AudioWorkletGlobalScope.JSSynth.rewriteEventData` for worklet).
+* You can rewrite event data passed to the callback, by using `JSSynth.rewriteEventData` (`AudioWorkletGlobalScope.JSSynth.rewriteEventData` for worklet).
 
 ### `JSSynth` methods
 
