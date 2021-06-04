@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.8.3
+
+(This version has no updates for js-synthesizer itself.)
+
+- Update libfluidsynth scripts
+- Update README.md
+
 ## v1.8.2
 
 - Downgrade Node.js version to v12
