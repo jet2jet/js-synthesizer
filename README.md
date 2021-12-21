@@ -150,7 +150,7 @@ The `Sequencer` instance is created only via following methods:
 * `JSSynth.AudioWorkletNodeSynthesizer.prototype.createSequencer` (instance method)
     * Returns the Promise object that resolves with `JSSynth.ISequencer` instance. The instance can be used with `JSSynth.AudioWorkletNodeSynthesizer` instances which handled `createSequencer` calls.
 
-### Using hook / handle MIDI-related event data with user-defined calllback
+### Using hook / handle MIDI-related event data with user-defined callback
 
 You can hook MIDI events posted by player. For `JSSynth.Synthesizer` instance, use `hookPlayerMIDIEvents` method as followings:
 
