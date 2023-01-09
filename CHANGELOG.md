@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.8.5
+
+(This version has no updates for js-synthesizer itself.)
+
+- Update libfluidsynth scripts (add 2.3.0 and remove 2.1.9)
+- Update README.md
+
 ## v1.8.4
 
 (This version has no updates for js-synthesizer itself.)
