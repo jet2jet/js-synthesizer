@@ -1,13 +1,8 @@
 {
+  "name": "js-synthesizer",
+  "version": "1.8.4",
   "author": "jet",
-  "dependencies": {},
   "description": "Synthesizer library for web-based JS program, using with Web Audio or etc.",
-  "devDependencies": {
-    "ts-loader": "^9.2.2",
-    "typescript": "^4.2.4",
-    "webpack": "^5.37.1",
-    "webpack-cli": "^4.7.0"
-  },
   "engines": {
     "node": ">=12",
     "npm": ">=6"
@@ -27,7 +22,7 @@
   "license": "BSD-3-Clause",
   "main": "./dist/js-synthesizer.js",
   "module": "./dist/lib/index.js",
-  "name": "js-synthesizer",
+  "types": "./dist/lib/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/jet2jet/js-synthesizer.git"
@@ -39,6 +34,11 @@
     "build:minified": "npm run build:ts && npm run build:lib:minified",
     "build:ts": "tsc -p tsconfig.json"
   },
-  "types": "./dist/lib/index.d.ts",
-  "version": "1.8.4"
+  "dependencies": {},
+  "devDependencies": {
+    "ts-loader": "^9.2.2",
+    "typescript": "^4.2.4",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^4.10.0"
+  }
 }
