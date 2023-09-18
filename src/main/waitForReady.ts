@@ -1,9 +1,4 @@
-import Synthesizer from "./Synthesizer";
-
-/** @internal */
-declare global {
-	var Module: any;
-}
+import Synthesizer from './Synthesizer';
 
 /**
  * Returns the Promise object which resolves when the synthesizer engine is ready.
