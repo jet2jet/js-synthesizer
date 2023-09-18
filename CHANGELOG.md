@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.9.0
+
+- Add `disableLogging` / `restoreLogging` for suppressing logs
+
 ## v1.8.5
 
 (This version has no updates for js-synthesizer itself.)

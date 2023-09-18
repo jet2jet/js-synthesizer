@@ -217,6 +217,10 @@ Can be used to wait for the synthesizer engine's ready.
 
 Return: `Promise` object (resolves when the synthesizer engine (libfluidsynth) is ready)
 
+#### `disableLogging` / `restoreLogging`
+
+Can be used to suppress logs from libfluidsynth.
+
 ### `JSSynth.ISynthesizer` methods
 
 (Not documented yet. Please see `dist/lib/ISynthesizer.d.ts`.)
