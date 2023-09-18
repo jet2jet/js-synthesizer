@@ -1,5 +1,5 @@
 
-import { SynthesizerDefaultValues, InterpolationValues } from './Constants';
+import { SynthesizerDefaultValues, InterpolationValues, PlayerSetTempoType } from './Constants';
 import ISequencer from './ISequencer';
 import ISynthesizer from './ISynthesizer';
 import SynthesizerSettings from './SynthesizerSettings';
@@ -253,6 +253,12 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	}
 	public seekPlayer(ticks: number): void {
 		MethodMessaging.postCall(this._messaging!, 'seekPlayer', [ticks]);
+	}
+	public setPlayerLoop(loopTimes: number): void {
+		MethodMessaging.postCall(this._messaging!, 'setPlayerLoop', [loopTimes]);
+	}
+	public setPlayerTempo(tempoType: PlayerSetTempoType, tempo: number): void {
+		MethodMessaging.postCall(this._messaging!, 'setPlayerTempo', [tempoType, tempo]);
 	}
 
 	public waitForPlayerStopped() {

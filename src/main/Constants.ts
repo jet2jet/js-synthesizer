@@ -114,3 +114,13 @@ export const enum BreathFlags {
 	Mono = 0x20,
 	Sync = 0x40
 }
+
+/** Tempo type for `Synthesizer.setPlayerTempo` */
+const PlayerSetTempoType = {
+	Internal: 0,
+	ExternalBpm: 1,
+	ExternalMidi: 2,
+} as const;
+/** Tempo type for `Synthesizer.setPlayerTempo` */
+type PlayerSetTempoType = (typeof PlayerSetTempoType)[keyof typeof PlayerSetTempoType];
+export { PlayerSetTempoType };

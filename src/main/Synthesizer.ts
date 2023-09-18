@@ -5,7 +5,8 @@ import {
 	ChorusModulation,
 	GeneratorTypes,
 	LegatoMode,
-	PortamentoMode
+	PortamentoMode,
+	PlayerSetTempoType,
 } from './Constants';
 import IMIDIEvent from './IMIDIEvent';
 import ISequencer from './ISequencer';
@@ -278,10 +279,12 @@ export default class Synthesizer implements ISynthesizer {
 	/** @internal */
 	private _playerPlaying: boolean;
 	/** @internal */
-	private _playerDefer: undefined | {
-		promise: Promise<void>;
-		resolve: () => void;
-	};
+	private _playerDefer:
+		| undefined
+		| {
+				promise: Promise<void>;
+				resolve: () => void;
+		  };
 	/** @internal */
 	private _playerCallbackPtr: number | null;
 	/** @internal */
@@ -328,9 +331,12 @@ export default class Synthesizer implements ISynthesizer {
 		return this._synth;
 	}
 
-	public createAudioNode(context: AudioContext, frameSize?: number): AudioNode {
+	public createAudioNode(
+		context: AudioContext,
+		frameSize?: number
+	): AudioNode {
 		const node = context.createScriptProcessor(frameSize, 0, 2);
-		node.addEventListener('audioprocess', (ev) => {
+		node.addEventListener("audioprocess", (ev) => {
 			this.render(ev.outputBuffer);
 		});
 		return node;
@@ -339,41 +345,113 @@ export default class Synthesizer implements ISynthesizer {
 	public init(sampleRate: number, settings?: SynthesizerSettings) {
 		this.close();
 
-		const set = this._settings = _module._new_fluid_settings();
-		fluid_settings_setnum(set, 'synth.sample-rate', sampleRate);
+		const set = (this._settings = _module._new_fluid_settings());
+		fluid_settings_setnum(set, "synth.sample-rate", sampleRate);
 		if (settings) {
-			if (typeof settings.initialGain !== 'undefined') {
+			if (typeof settings.initialGain !== "undefined") {
 				this._gain = settings.initialGain;
 			}
-			setBoolValueForSettings(set, 'synth.chorus.active', settings.chorusActive);
-			setNumValueForSettings(set, 'synth.chorus.depth', settings.chorusDepth);
-			setNumValueForSettings(set, 'synth.chorus.level', settings.chorusLevel);
-			setIntValueForSettings(set, 'synth.chorus.nr', settings.chorusNr);
-			setNumValueForSettings(set, 'synth.chorus.speed', settings.chorusSpeed);
-			setIntValueForSettings(set, 'synth.midi-channels', settings.midiChannelCount);
-			setStrValueForSettings(set, 'synth.midi-bank-select', settings.midiBankSelect);
-			setIntValueForSettings(set, 'synth.min-note-length', settings.minNoteLength);
-			setNumValueForSettings(set, 'synth.overflow.age', settings.overflowAge);
-			setNumValueForSettings(set, 'synth.overflow.important', settings.overflowImportantValue);
-			if (typeof settings.overflowImportantChannels !== 'undefined') {
+			setBoolValueForSettings(
+				set,
+				"synth.chorus.active",
+				settings.chorusActive
+			);
+			setNumValueForSettings(
+				set,
+				"synth.chorus.depth",
+				settings.chorusDepth
+			);
+			setNumValueForSettings(
+				set,
+				"synth.chorus.level",
+				settings.chorusLevel
+			);
+			setIntValueForSettings(set, "synth.chorus.nr", settings.chorusNr);
+			setNumValueForSettings(
+				set,
+				"synth.chorus.speed",
+				settings.chorusSpeed
+			);
+			setIntValueForSettings(
+				set,
+				"synth.midi-channels",
+				settings.midiChannelCount
+			);
+			setStrValueForSettings(
+				set,
+				"synth.midi-bank-select",
+				settings.midiBankSelect
+			);
+			setIntValueForSettings(
+				set,
+				"synth.min-note-length",
+				settings.minNoteLength
+			);
+			setNumValueForSettings(
+				set,
+				"synth.overflow.age",
+				settings.overflowAge
+			);
+			setNumValueForSettings(
+				set,
+				"synth.overflow.important",
+				settings.overflowImportantValue
+			);
+			if (typeof settings.overflowImportantChannels !== "undefined") {
 				fluid_settings_setstr(
 					set,
-					'synth.overflow.important-channels',
-					settings.overflowImportantChannels.join(',')
+					"synth.overflow.important-channels",
+					settings.overflowImportantChannels.join(",")
 				);
 			}
-			setNumValueForSettings(set, 'synth.overflow.percussion', settings.overflowPercussion);
-			setNumValueForSettings(set, 'synth.overflow.released', settings.overflowReleased);
-			setNumValueForSettings(set, 'synth.overflow.sustained', settings.overflowSustained);
-			setNumValueForSettings(set, 'synth.overflow.volume', settings.overflowVolume);
-			setIntValueForSettings(set, 'synth.polyphony', settings.polyphony);
-			setBoolValueForSettings(set, 'synth.reverb.active', settings.reverbActive);
-			setNumValueForSettings(set, 'synth.reverb.damp', settings.reverbDamp);
-			setNumValueForSettings(set, 'synth.reverb.level', settings.reverbLevel);
-			setNumValueForSettings(set, 'synth.reverb.room-size', settings.reverbRoomSize);
-			setNumValueForSettings(set, 'synth.reverb.width', settings.reverbWidth);
+			setNumValueForSettings(
+				set,
+				"synth.overflow.percussion",
+				settings.overflowPercussion
+			);
+			setNumValueForSettings(
+				set,
+				"synth.overflow.released",
+				settings.overflowReleased
+			);
+			setNumValueForSettings(
+				set,
+				"synth.overflow.sustained",
+				settings.overflowSustained
+			);
+			setNumValueForSettings(
+				set,
+				"synth.overflow.volume",
+				settings.overflowVolume
+			);
+			setIntValueForSettings(set, "synth.polyphony", settings.polyphony);
+			setBoolValueForSettings(
+				set,
+				"synth.reverb.active",
+				settings.reverbActive
+			);
+			setNumValueForSettings(
+				set,
+				"synth.reverb.damp",
+				settings.reverbDamp
+			);
+			setNumValueForSettings(
+				set,
+				"synth.reverb.level",
+				settings.reverbLevel
+			);
+			setNumValueForSettings(
+				set,
+				"synth.reverb.room-size",
+				settings.reverbRoomSize
+			);
+			setNumValueForSettings(
+				set,
+				"synth.reverb.width",
+				settings.reverbWidth
+			);
 		}
-		fluid_settings_setnum(set, 'synth.gain', this._gain);
+		fluid_settings_setnum(set, "synth.gain", this._gain);
 
 		this._synth = _module._new_fluid_synth(this._settings);
 
@@ -394,13 +472,15 @@ export default class Synthesizer implements ISynthesizer {
 	}
 
 	public isPlaying() {
-		return this._synth !== INVALID_POINTER &&
-			getActiveVoiceCount(this._synth) > 0;
+		return (
+			this._synth !== INVALID_POINTER &&
+			getActiveVoiceCount(this._synth) > 0
+		);
 	}
 
 	public setInterpolation(value: InterpolationValues, channel?: number) {
 		this.ensureInitialized();
-		if (typeof channel === 'undefined') {
+		if (typeof channel === "undefined") {
 			channel = -1;
 		}
 		_module._fluid_synth_set_interp_method(this._synth, channel, value);
@@ -419,7 +499,11 @@ export default class Synthesizer implements ISynthesizer {
 	public setChannelType(channel: number, isDrum: boolean) {
 		this.ensureInitialized();
 		// CHANNEL_TYPE_MELODIC = 0, CHANNEL_TYPE_DRUM = 1
-		_module._fluid_synth_set_channel_type(this._synth, channel, isDrum ? 1 : 0);
+		_module._fluid_synth_set_channel_type(
+			this._synth,
+			channel,
+			isDrum ? 1 : 0
+		);
 	}
 
 	public waitForVoicesStopped() {
@@ -429,15 +513,15 @@ export default class Synthesizer implements ISynthesizer {
 	public loadSFont(bin: ArrayBuffer) {
 		this.ensureInitialized();
 
-		const name = makeRandomFileName('sfont', '.sf2');
+		const name = makeRandomFileName("sfont", ".sf2");
 		const ub = new Uint8Array(bin);
 
 		_fs.writeFile(name, ub);
 		const sfont = fluid_synth_sfload(this._synth, name, 1);
 		_fs.unlink(name);
-		return sfont === -1 ?
-			Promise.reject(new Error(fluid_synth_error!(this._synth))) :
-			Promise.resolve(sfont);
+		return sfont === -1
+			? Promise.reject(new Error(fluid_synth_error!(this._synth)))
+			: Promise.resolve(sfont);
 	}
 
 	public unloadSFont(id: number) {
@@ -468,16 +552,24 @@ export default class Synthesizer implements ISynthesizer {
 
 	public getSFontBankOffset(id: number) {
 		this.ensureInitialized();
-		return Promise.resolve(_module._fluid_synth_get_bank_offset(this._synth, id) as number);
+		return Promise.resolve(
+			_module._fluid_synth_get_bank_offset(this._synth, id) as number
+		);
 	}
 	public setSFontBankOffset(id: number, offset: number) {
 		this.ensureInitialized();
 		_module._fluid_synth_set_bank_offset(this._synth, id, offset);
 	}
-	
+
 	public render(outBuffer: AudioBuffer | Float32Array[]) {
-		const frameCount = 'numberOfChannels' in outBuffer ? outBuffer.length : outBuffer[0].length;
-		const channels = 'numberOfChannels' in outBuffer ? outBuffer.numberOfChannels : outBuffer.length;
+		const frameCount =
+			"numberOfChannels" in outBuffer
+				? outBuffer.length
+				: outBuffer[0].length;
+		const channels =
+			"numberOfChannels" in outBuffer
+				? outBuffer.numberOfChannels
+				: outBuffer.length;
 		const sizePerChannel = 4 * frameCount;
 		const totalSize = sizePerChannel * 2;
 		if (this._bufferSize < totalSize) {
@@ -489,23 +581,32 @@ export default class Synthesizer implements ISynthesizer {
 		}
 
 		const memLeft = this._buffer;
-		const memRight = (this._buffer as number + sizePerChannel) as PointerType;
+		const memRight = ((this._buffer as number) +
+			sizePerChannel) as PointerType;
 		this.renderRaw(memLeft, memRight, frameCount);
 
-		const aLeft = new Float32Array(_module.HEAPU8.buffer, memLeft, frameCount);
-		const aRight = channels >= 2 ? new Float32Array(_module.HEAPU8.buffer, memRight, frameCount) : null;
-		if ('numberOfChannels' in outBuffer) {
+		const aLeft = new Float32Array(
+			_module.HEAPU8.buffer,
+			memLeft,
+			frameCount
+		);
+		const aRight =
+			channels >= 2
+				? new Float32Array(_module.HEAPU8.buffer, memRight, frameCount)
+				: null;
+		if ("numberOfChannels" in outBuffer) {
 			if (outBuffer.copyToChannel) {
 				outBuffer.copyToChannel(aLeft, 0, 0);
 				if (aRight) {
 					outBuffer.copyToChannel(aRight, 1, 0);
 				}
-			} else { // copyToChannel API not exist in Safari AudioBuffer
+			} else {
+				// copyToChannel API not exist in Safari AudioBuffer
 				const leftData = outBuffer.getChannelData(0);
-				aLeft.forEach((val, i)=> leftData[i] = val);
+				aLeft.forEach((val, i) => (leftData[i] = val));
 				if (aRight) {
 					const rightData = outBuffer.getChannelData(1);
-					aRight.forEach((val, i)=> rightData[i] = val);
+					aRight.forEach((val, i) => (rightData[i] = val));
 				}
 			}
 		} else {
@@ -544,8 +645,15 @@ export default class Synthesizer implements ISynthesizer {
 		const len = data.byteLength;
 		const mem = malloc(len);
 		_module.HEAPU8.set(data, mem);
-		_module._fluid_synth_sysex(this._synth, mem, len,
-			INVALID_POINTER, INVALID_POINTER, INVALID_POINTER, 0);
+		_module._fluid_synth_sysex(
+			this._synth,
+			mem,
+			len,
+			INVALID_POINTER,
+			INVALID_POINTER,
+			INVALID_POINTER,
+			0
+		);
 		free(mem);
 	}
 
@@ -558,8 +666,19 @@ export default class Synthesizer implements ISynthesizer {
 	public midiSFontSelect(chan: number, sfontId: number) {
 		_module._fluid_synth_sfont_select(this._synth, chan, sfontId);
 	}
-	public midiProgramSelect(chan: number, sfontId: number, bank: number, presetNum: number) {
-		_module._fluid_synth_program_select(this._synth, chan, sfontId, bank, presetNum);
+	public midiProgramSelect(
+		chan: number,
+		sfontId: number,
+		bank: number,
+		presetNum: number
+	) {
+		_module._fluid_synth_program_select(
+			this._synth,
+			chan,
+			sfontId,
+			bank,
+			presetNum
+		);
 	}
 	public midiUnsetProgram(chan: number) {
 		_module._fluid_synth_unset_program(this._synth, chan);
@@ -571,22 +690,43 @@ export default class Synthesizer implements ISynthesizer {
 		_module._fluid_synth_system_reset(this._synth);
 	}
 	public midiAllNotesOff(chan?: number) {
-		_module._fluid_synth_all_notes_off(this._synth, typeof chan === 'undefined' ? -1 : chan);
+		_module._fluid_synth_all_notes_off(
+			this._synth,
+			typeof chan === "undefined" ? -1 : chan
+		);
 	}
 	public midiAllSoundsOff(chan?: number) {
-		_module._fluid_synth_all_sounds_off(this._synth, typeof chan === 'undefined' ? -1 : chan);
+		_module._fluid_synth_all_sounds_off(
+			this._synth,
+			typeof chan === "undefined" ? -1 : chan
+		);
 	}
 	public midiSetChannelType(chan: number, isDrum: boolean) {
 		// CHANNEL_TYPE_MELODIC = 0
 		// CHANNEL_TYPE_DRUM = 1
-		_module._fluid_synth_set_channel_type(this._synth, chan, isDrum ? 1 : 0);
+		_module._fluid_synth_set_channel_type(
+			this._synth,
+			chan,
+			isDrum ? 1 : 0
+		);
 	}
 
 	/**
 	 * Set reverb parameters to the synthesizer.
 	 */
-	public setReverb(roomsize: number, damping: number, width: number, level: number) {
-		_module._fluid_synth_set_reverb(this._synth, roomsize, damping, width, level);
+	public setReverb(
+		roomsize: number,
+		damping: number,
+		width: number,
+		level: number
+	) {
+		_module._fluid_synth_set_reverb(
+			this._synth,
+			roomsize,
+			damping,
+			width,
+			level
+		);
 	}
 	/**
 	 * Set reverb roomsize parameter to the synthesizer.
@@ -646,8 +786,21 @@ export default class Synthesizer implements ISynthesizer {
 	/**
 	 * Set chorus parameters to the synthesizer.
 	 */
-	public setChorus(voiceCount: number, level: number, speed: number, depthMillisec: number, type: ChorusModulation) {
-		_module._fluid_synth_set_chorus(this._synth, voiceCount, level, speed, depthMillisec, type);
+	public setChorus(
+		voiceCount: number,
+		level: number,
+		speed: number,
+		depthMillisec: number,
+		type: ChorusModulation
+	) {
+		_module._fluid_synth_set_chorus(
+			this._synth,
+			voiceCount,
+			level,
+			speed,
+			depthMillisec,
+			type
+		);
 	}
 	/**
 	 * Set chorus voice count parameter to the synthesizer.
@@ -740,7 +893,11 @@ export default class Synthesizer implements ISynthesizer {
 	 * @return legato mode
 	 */
 	public getLegatoMode(channel: number) {
-		_module._fluid_synth_get_legato_mode(this._synth, channel, this._numPtr);
+		_module._fluid_synth_get_legato_mode(
+			this._synth,
+			channel,
+			this._numPtr
+		);
 		return _module.HEAP32[(this._numPtr as number) >> 2] as LegatoMode;
 	}
 	/**
@@ -757,7 +914,11 @@ export default class Synthesizer implements ISynthesizer {
 	 * @return portamento mode
 	 */
 	public getPortamentoMode(channel: number) {
-		_module._fluid_synth_get_portamento_mode(this._synth, channel, this._numPtr);
+		_module._fluid_synth_get_portamento_mode(
+			this._synth,
+			channel,
+			this._numPtr
+		);
 		return _module.HEAP32[(this._numPtr as number) >> 2] as PortamentoMode;
 	}
 	/**
@@ -774,7 +935,11 @@ export default class Synthesizer implements ISynthesizer {
 	 * @return breath mode (BreathFlags)
 	 */
 	public getBreathMode(channel: number) {
-		_module._fluid_synth_get_breath_mode(this._synth, channel, this._numPtr);
+		_module._fluid_synth_get_breath_mode(
+			this._synth,
+			channel,
+			this._numPtr
+		);
 		return _module.HEAP32[(this._numPtr as number) >> 2] as number;
 	}
 	/**
@@ -810,14 +975,16 @@ export default class Synthesizer implements ISynthesizer {
 				// hacky retrieve 'fluid_synth_handle_midi_event' callback pointer
 				// * 'playback_callback' is filled with 'fluid_synth_handle_midi_event' by default.
 				// * 'playback_userdata' is filled with the synthesizer pointer by default
-				const funcPtr: PointerType = _module.HEAPU32[((player as number) + 588) >> 2]; // _fluid_player_t::playback_callback
-				const synthPtr: SynthId = _module.HEAPU32[((player as number) + 592) >> 2];    // _fluid_player_t::playback_userdata
+				const funcPtr: PointerType =
+					_module.HEAPU32[((player as number) + 588) >> 2]; // _fluid_player_t::playback_callback
+				const synthPtr: SynthId =
+					_module.HEAPU32[((player as number) + 592) >> 2]; // _fluid_player_t::playback_userdata
 				if (synthPtr === this._synth) {
 					this._fluidSynthCallback = funcPtr;
 				}
 			}
 		} else {
-			throw new Error('Out of memory');
+			throw new Error("Out of memory");
 		}
 	}
 
@@ -851,7 +1018,9 @@ export default class Synthesizer implements ISynthesizer {
 		_module.HEAPU8.set(new Uint8Array(bin), mem);
 		const r: number = _module._fluid_player_add_mem(this._player, mem, len);
 		free(mem);
-		return r !== -1 ? Promise.resolve() : Promise.reject(new Error(fluid_synth_error!(this._synth)));
+		return r !== -1
+			? Promise.resolve()
+			: Promise.reject(new Error(fluid_synth_error!(this._synth)));
 	}
 
 	public playPlayer() {
@@ -864,13 +1033,13 @@ export default class Synthesizer implements ISynthesizer {
 			return Promise.reject(new Error(fluid_synth_error!(this._synth)));
 		}
 		this._playerPlaying = true;
-		let resolver = () => { };
+		let resolver = () => {};
 		const p = new Promise<void>((resolve) => {
 			resolver = resolve;
 		});
 		this._playerDefer = {
 			promise: p,
-			resolve: resolver
+			resolve: resolver,
 		};
 		return Promise.resolve();
 	}
@@ -885,18 +1054,22 @@ export default class Synthesizer implements ISynthesizer {
 		_module._fluid_synth_all_sounds_off(this._synth, -1);
 		if (this._playerDefer) {
 			this._playerDefer.resolve();
-			this._playerDefer = void (0);
+			this._playerDefer = void 0;
 		}
 		this._playerPlaying = false;
 	}
 
 	public retrievePlayerCurrentTick(): Promise<number> {
 		this.ensurePlayerInitialized();
-		return Promise.resolve(_module._fluid_player_get_current_tick(this._player));
+		return Promise.resolve(
+			_module._fluid_player_get_current_tick(this._player)
+		);
 	}
 	public retrievePlayerTotalTicks(): Promise<number> {
 		this.ensurePlayerInitialized();
-		return Promise.resolve(_module._fluid_player_get_total_ticks(this._player));
+		return Promise.resolve(
+			_module._fluid_player_get_total_ticks(this._player)
+		);
 	}
 	public retrievePlayerBpm(): Promise<number> {
 		this.ensurePlayerInitialized();
@@ -904,11 +1077,21 @@ export default class Synthesizer implements ISynthesizer {
 	}
 	public retrievePlayerMIDITempo(): Promise<number> {
 		this.ensurePlayerInitialized();
-		return Promise.resolve(_module._fluid_player_get_midi_tempo(this._player));
+		return Promise.resolve(
+			_module._fluid_player_get_midi_tempo(this._player)
+		);
 	}
 	public seekPlayer(ticks: number): void {
 		this.ensurePlayerInitialized();
 		_module._fluid_player_seek(this._player, ticks);
+	}
+	public setPlayerLoop(loopTimes: number): void {
+		this.ensurePlayerInitialized();
+		_module._fluid_player_set_loop(this._player, loopTimes);
+	}
+	public setPlayerTempo(tempoType: PlayerSetTempoType, tempo: number): void {
+		this.ensurePlayerInitialized();
+		_module._fluid_player_set_tempo(this._player, tempoType, tempo);
 	}
 
 	/**
@@ -917,33 +1100,52 @@ export default class Synthesizer implements ISynthesizer {
 	 * @param callback hook callback function, or null to unhook
 	 * @param param any additional data passed to the callback
 	 */
-	public hookPlayerMIDIEvents(callback: HookMIDIEventCallback | null, param?: any) {
+	public hookPlayerMIDIEvents(
+		callback: HookMIDIEventCallback | null,
+		param?: any
+	) {
 		this.ensurePlayerInitialized();
 
 		const oldPtr = this._playerCallbackPtr;
 		if (oldPtr === null && callback === null) {
 			return;
 		}
-		const newPtr = (
+		const newPtr =
 			// if callback is specified, add function
-			callback !== null ? _addFunction(makeMIDIEventCallback(this, callback, param), 'iii') : (
-				// if _fluidSynthCallback is filled, set null to use it for reset callback
+			callback !== null
+				? _addFunction(
+						makeMIDIEventCallback(this, callback, param),
+						"iii"
+				  )
+				: // if _fluidSynthCallback is filled, set null to use it for reset callback
 				// if not, add function defaultMIDIEventCallback for reset
-				this._fluidSynthCallback !== null ? null : _addFunction(defaultMIDIEventCallback, 'iii')
-			)
-		);
+				this._fluidSynthCallback !== null
+				? null
+				: _addFunction(defaultMIDIEventCallback, "iii");
 		// the third parameter of 'fluid_player_set_playback_callback' should be 'fluid_synth_t*'
 		if (oldPtr !== null && newPtr !== null) {
 			// (using defaultMIDIEventCallback also comes here)
-			_module._fluid_player_set_playback_callback(this._player, newPtr, this._synth);
+			_module._fluid_player_set_playback_callback(
+				this._player,
+				newPtr,
+				this._synth
+			);
 			_removeFunction(oldPtr);
 		} else {
 			if (newPtr === null) {
 				// newPtr === null --> use _fluidSynthCallback
-				_module._fluid_player_set_playback_callback(this._player, this._fluidSynthCallback!, this._synth);
+				_module._fluid_player_set_playback_callback(
+					this._player,
+					this._fluidSynthCallback!,
+					this._synth
+				);
 				_removeFunction(oldPtr!);
 			} else {
-				_module._fluid_player_set_playback_callback(this._player, newPtr, this._synth);
+				_module._fluid_player_set_playback_callback(
+					this._player,
+					newPtr,
+					this._synth
+				);
 			}
 		}
 		this._playerCallbackPtr = newPtr;
@@ -952,7 +1154,7 @@ export default class Synthesizer implements ISynthesizer {
 	/** @internal */
 	private ensureInitialized() {
 		if (this._synth === INVALID_POINTER) {
-			throw new Error('Synthesizer is not initialized');
+			throw new Error("Synthesizer is not initialized");
 		}
 	}
 
@@ -965,8 +1167,21 @@ export default class Synthesizer implements ISynthesizer {
 	}
 
 	/** @internal */
-	private renderRaw(memLeft: PointerType, memRight: PointerType, frameCount: number) {
-		_module._fluid_synth_write_float(this._synth, frameCount, memLeft, 0, 1, memRight, 0, 1);
+	private renderRaw(
+		memLeft: PointerType,
+		memRight: PointerType,
+		frameCount: number
+	) {
+		_module._fluid_synth_write_float(
+			this._synth,
+			frameCount,
+			memLeft,
+			0,
+			1,
+			memRight,
+			0,
+			1
+		);
 	}
 
 	/** @internal */
@@ -975,7 +1190,7 @@ export default class Synthesizer implements ISynthesizer {
 		const size = 4 * frameCount;
 		const mem = malloc(size * 2);
 		const memLeft = mem;
-		const memRight = (mem as number + size) as PointerType;
+		const memRight = ((mem as number) + size) as PointerType;
 		while (this.isPlaying()) {
 			this.renderRaw(memLeft, memRight, frameCount);
 		}
@@ -991,16 +1206,17 @@ export default class Synthesizer implements ISynthesizer {
 		const size = 4 * frameCount;
 		const mem = malloc(size * 2);
 		const memLeft = mem;
-		const memRight = (mem as number + size) as PointerType;
-		const nextFrame = (
-			typeof setTimeout !== 'undefined' ?
-				() => {
-					return new Promise<void>((resolve) => setTimeout(resolve, 0));
-				} :
-				() => {
-					return Promise.resolve();
-				}
-		);
+		const memRight = ((mem as number) + size) as PointerType;
+		const nextFrame =
+			typeof setTimeout !== "undefined"
+				? () => {
+						return new Promise<void>((resolve) =>
+							setTimeout(resolve, 0)
+						);
+				  }
+				: () => {
+						return Promise.resolve();
+				  };
 		function head(): Promise<void> {
 			return nextFrame().then(tail);
 		}
@@ -1017,7 +1233,9 @@ export default class Synthesizer implements ISynthesizer {
 	}
 
 	public waitForPlayerStopped() {
-		return this._playerDefer ? this._playerDefer.promise : Promise.resolve();
+		return this._playerDefer
+			? this._playerDefer.promise
+			: Promise.resolve();
 	}
 
 	/**
@@ -1038,16 +1256,30 @@ export default class Synthesizer implements ISynthesizer {
 	 * @param param additional parameter passed to the callback
 	 * @return registered sequencer client id (can be passed to seq.unregisterClient())
 	 */
-	public static registerSequencerClient(seq: ISequencer, name: string, callback: SequencerClientCallback, param: number): number {
+	public static registerSequencerClient(
+		seq: ISequencer,
+		name: string,
+		callback: SequencerClientCallback,
+		param: number
+	): number {
 		if (!(seq instanceof Sequencer)) {
-			throw new TypeError('Invalid sequencer instance');
+			throw new TypeError("Invalid sequencer instance");
 		}
-		const ptr = _addFunction((time: number, ev: PointerType, _seq: number, data: number) => {
-			const e = new SequencerEventData(ev, _module);
-			const type: SequencerEventType = _module._fluid_event_get_type(ev);
-			callback(time, type, e, seq, data);
-		}, 'viiii');
-		const r = fluid_sequencer_register_client(seq.getRaw(), name, ptr, param);
+		const ptr = _addFunction(
+			(time: number, ev: PointerType, _seq: number, data: number) => {
+				const e = new SequencerEventData(ev, _module);
+				const type: SequencerEventType =
+					_module._fluid_event_get_type(ev);
+				callback(time, type, e, seq, data);
+			},
+			"viiii"
+		);
+		const r = fluid_sequencer_register_client(
+			seq.getRaw(),
+			name,
+			ptr,
+			param
+		);
 		if (r !== -1) {
 			seq._clientFuncMap[r] = ptr;
 		}
@@ -1060,9 +1292,13 @@ export default class Synthesizer implements ISynthesizer {
 	 * @param clientId registered client id (-1 for registered synthesizer)
 	 * @param event event data
 	 */
-	public static sendEventToClientNow(seq: ISequencer, clientId: number, event: SequencerEvent): void {
+	public static sendEventToClientNow(
+		seq: ISequencer,
+		clientId: number,
+		event: SequencerEvent
+	): void {
 		if (!(seq instanceof Sequencer)) {
-			throw new TypeError('Invalid sequencer instance');
+			throw new TypeError("Invalid sequencer instance");
 		}
 		seq.sendEventToClientNow(clientId, event);
 	}
@@ -1072,9 +1308,13 @@ export default class Synthesizer implements ISynthesizer {
 	 * @param clientId registered client id (-1 for registered synthesizer)
 	 * @param eventData event data which can be retrieved in SequencerClientCallback
 	 */
-	public static sendEventNow(seq: ISequencer, clientId: number, eventData: ISequencerEventData): void {
+	public static sendEventNow(
+		seq: ISequencer,
+		clientId: number,
+		eventData: ISequencerEventData
+	): void {
 		if (!(seq instanceof Sequencer)) {
-			throw new TypeError('Invalid sequencer instance');
+			throw new TypeError("Invalid sequencer instance");
 		}
 		seq.sendEventNow(clientId, eventData);
 	}
@@ -1087,7 +1327,7 @@ export default class Synthesizer implements ISynthesizer {
 	 */
 	public static setIntervalForSequencer(seq: ISequencer, msec: number) {
 		if (!(seq instanceof Sequencer)) {
-			throw new TypeError('Invalid sequencer instance');
+			throw new TypeError("Invalid sequencer instance");
 		}
 		return seq.setIntervalForSequencer(msec);
 	}

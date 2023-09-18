@@ -1,5 +1,5 @@
 
-import { InterpolationValues } from './Constants';
+import { InterpolationValues, PlayerSetTempoType } from './Constants';
 import SynthesizerSettings from './SynthesizerSettings';
 
 /**
@@ -257,6 +257,17 @@ export default interface ISynthesizer {
 	 * @param ticks the absolute tick value to seek (0 refers the first position)
 	 */
 	seekPlayer(ticks: number): void;
+	/**
+	 * Sets the loop for the playlist in the player.
+	 * @param loopTimes loop count (`-1` for infinite loop)
+	 */
+	setPlayerLoop(loopTimes: number): void;
+	/**
+	 * Sets the tempo for the player.
+	 * @param tempoType tempo value type for `tempo`
+	 * @param tempo tempo value
+	 */
+	setPlayerTempo(tempoType: PlayerSetTempoType, tempo: number): void;
 	/**
 	 * Wait for finishing player process.
 	 * Note that even if resolved, some voices may still be playing.
