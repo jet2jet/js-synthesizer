@@ -6,6 +6,7 @@ import waitForReady from './waitForReady';
 
 import {
 	Constants,
+	ProcessorOptions,
 	SynthesizerStatus
 } from './AudioWorkletNodeSynthesizer';
 
@@ -16,6 +17,7 @@ import {
 	postReturnError,
     ReturnMessageInstance
 } from './MethodMessaging';
+import { disableLogging } from './logging';
 
 const promiseWasmInitialized = waitForReady();
 
@@ -32,8 +34,12 @@ export default function registerAudioWorkletProcessor() {
 		constructor(options: AudioWorkletNodeOptions) {
 			super(options);
 
+			const processorOptions: ProcessorOptions | undefined = options.processorOptions;
 			const settings: SynthesizerSettings | undefined =
-				options.processorOptions && options.processorOptions.settings;
+				processorOptions && processorOptions.settings;
+			if (processorOptions && processorOptions.disabledLoggingLevel) {
+				disableLogging(processorOptions.disabledLoggingLevel);
+			}
 
 			const promiseInitialized = this.doInit(settings);
 			this._messaging = initializeReturnPort(this.port, promiseInitialized, () => this.synth!, (data) => {
@@ -78,6 +84,9 @@ export default function registerAudioWorkletProcessor() {
 						return true;
 					case 'playPlayer':
 						this.doPlayPlayer(data);
+						return true;
+					case 'loggingChanged':
+						disableLogging(data.args[0]);
 						return true;
 				}
 				return false;

@@ -11,6 +11,7 @@ import Synthesizer, { HookMIDIEventCallback, SequencerClientCallback } from './S
 import SynthesizerSettings from './SynthesizerSettings';
 import waitForReady from './waitForReady';
 import AudioWorkletNodeSynthesizer from './AudioWorkletNodeSynthesizer';
+import { disableLogging, restoreLogging, LogLevel } from './logging';
 
 export {
 	Constants,
@@ -28,5 +29,8 @@ export {
 	Synthesizer,
 	SynthesizerSettings,
 	waitForReady,
-	AudioWorkletNodeSynthesizer
+	AudioWorkletNodeSynthesizer,
+	disableLogging,
+	restoreLogging,
+	LogLevel,
 };

@@ -4,10 +4,9 @@ import ISequencer from './ISequencer';
 import ISynthesizer from './ISynthesizer';
 import SynthesizerSettings from './SynthesizerSettings';
 import WorkletSoundfont from './WorkletSoundfont';
-
 import WorkletSequencer from './WorkletSequencer';
-
 import * as MethodMessaging from './MethodMessaging';
+import { addLoggingStatusChangedHandler, getDisabledLoggingLevel, LogLevel } from './logging';
 
 /** @internal */
 export const enum Constants {
@@ -18,6 +17,11 @@ export const enum Constants {
 export interface SynthesizerStatus {
 	playing: boolean;
 	playerPlaying: boolean;
+}
+/** @internal */
+export interface ProcessorOptions {
+	settings?: SynthesizerSettings;
+	disabledLoggingLevel?: LogLevel | null;
 }
 
 /** An synthesizer object with AudioWorkletNode */
@@ -32,6 +36,9 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	/** @internal */
 	private _gain: number;
 
+	/** @internal */
+	private handleLoggingChanged: (level: LogLevel | null) => void;
+
 	constructor() {
 		this._status = {
 			playing: false,
@@ -40,6 +47,8 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 		this._messaging = null;
 		this._node = null;
 		this._gain = SynthesizerDefaultValues.Gain;
+		this.handleLoggingChanged = this._handleLoggingChanged.bind(this);
+		addLoggingStatusChangedHandler(this.handleLoggingChanged);
 	}
 
 	/** Audio node for this synthesizer */
@@ -51,14 +60,16 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	 * Create AudiWorkletNode instance
 	 */
 	public createAudioNode(context: AudioContext, settings?: SynthesizerSettings) {
+		const processorOptions: ProcessorOptions = {
+			settings: settings,
+			disabledLoggingLevel: getDisabledLoggingLevel(),
+		};
 		const node = new AudioWorkletNode(context, Constants.ProcessorName, {
 			numberOfInputs: 0,
 			numberOfOutputs: 1,
 			channelCount: 2,
 			outputChannelCount: [2],
-			processorOptions: {
-				settings: settings
-			}
+			processorOptions: processorOptions,
 		});
 		this._node = node;
 
@@ -311,5 +322,13 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	/** @internal */
 	public _getRawSynthesizer(): Promise<number> {
 		return MethodMessaging.postCallWithPromise<number>(this._messaging!, 'getRawSynthesizer', []);
+	}
+
+	/** @internal */
+	private _handleLoggingChanged(level: LogLevel | null) {
+		if (this._messaging == null) {
+			return;
+		}
+		MethodMessaging.postCall(this._messaging, 'loggingChanged', [level]);
 	}
 }
