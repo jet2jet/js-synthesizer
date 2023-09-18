@@ -60,10 +60,12 @@ function bindFunctions() {
 		_module = AudioWorkletGlobalScope.wasmModule;
 		_addFunction = AudioWorkletGlobalScope.wasmAddFunction;
 		_removeFunction = AudioWorkletGlobalScope.wasmRemoveFunction;
-	} else {
+	} else if (typeof Module !== 'undefined') {
 		_module = Module;
 		_addFunction = addFunction;
 		_removeFunction = removeFunction;
+	} else {
+		throw new Error('wasm module is not available. libfluidsynth-*.js must be loaded.');
 	}
 	_fs = _module.FS;
 
@@ -98,9 +100,11 @@ function waitForInitialized() {
 	if (typeof AudioWorkletGlobalScope !== 'undefined') {
 		mod = AudioWorkletGlobalScope.wasmModule;
 		addOnPostRunFn = AudioWorkletGlobalScope.addOnPostRun;
-	} else {
+	} else if (typeof Module !== 'undefined') {
 		mod = Module;
 		addOnPostRunFn = typeof addOnPostRun !== 'undefined' ? addOnPostRun : undefined;
+	} else {
+		return Promise.reject(new Error('wasm module is not available. libfluidsynth-*.js must be loaded.'));
 	}
 	if (mod.calledRun) {
 		promiseWaitForInitialized = Promise.resolve();
