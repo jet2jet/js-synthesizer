@@ -36,9 +36,9 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "ts-loader": "^9.4.2",
+    "ts-loader": "^9.4.4",
     "typescript": "^4.2.4",
-    "webpack": "^5.75.0",
+    "webpack": "^5.88.2",
     "webpack-cli": "^4.10.0"
   }
 }
