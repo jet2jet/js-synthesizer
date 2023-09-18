@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.10.0
+
+- Add `setPlayerLoop` and `setPlayerTempo` methods to `ISynthesizer`
+
 ## v1.9.0
 
 - Add `disableLogging` / `restoreLogging` for suppressing logs
