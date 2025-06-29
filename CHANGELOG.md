@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.11.0
+
+- Add `Synthesizer.initializeWithFluidSynthModule`
+  - This allows to use loaded libfluidsynth instance explicitly, especially for Node.js environment (loaded via `require`)
+- Add `libfluidsynth` directory
+- Update libfluidsynth scripts (add 2.4.6 and remove 2.2.1)
+
 ## v1.10.0
 
 - Add `setPlayerLoop` and `setPlayerTempo` methods to `ISynthesizer`

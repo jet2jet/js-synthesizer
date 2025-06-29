@@ -1,7 +1,6 @@
 [![NPM version](https://badge.fury.io/js/js-synthesizer.svg)](https://www.npmjs.com/package/js-synthesizer)
 
-js-synthesizer
-==========
+# js-synthesizer
 
 js-synthesizer is a library that generates audio data (frames). [WebAssembly (wasm) version of FluidSynth](https://github.com/jet2jet/fluidsynth-emscripten) is used as a core synthesizer engine.
 
@@ -19,14 +18,14 @@ npm install --save js-synthesizer
 
 ### From main thread
 
-Copies `dist/js-synthesizer.js` (or `dist/js-synthesizer.min.js`) and `externals/libfluidsynth-2.3.0.js` (libfluidsynth JS file) to your project, and writes `<script>` tags as following order:
+Copies `dist/js-synthesizer.js` (or `dist/js-synthesizer.min.js`) and `externals/libfluidsynth-2.4.6.js` (libfluidsynth JS file) to your project, and writes `<script>` tags as following order:
 
 ```html
-<script src="libfluidsynth-2.3.0.js"></script>
+<script src="libfluidsynth-2.4.6.js"></script>
 <script src="js-synthesizer.js"></script>
 ```
 
-> If you want to use Soundfont version 3 (.sf3) files, use `externals/libfluidsynth-2.3.0-with-libsndfile.js` instead of `externals/libfluidsynth-2.3.0.js`.
+> If you want to use Soundfont version 3 (.sf3) files, use `externals/libfluidsynth-2.4.6-with-libsndfile.js` instead of `externals/libfluidsynth-2.4.6.js`.
 
 When scripts are available, please check whether `waitForReady` resolves.
 
@@ -81,7 +80,7 @@ Notes:
 
 * `js-synthesizer.js` intends the ES2015-supported environment. If you need to run the script without errors on non-ES2015 environment such as IE11 (to notify 'unsupported'), you should load those scripts dynamically, or use transpiler such as babel.
 * When just after the scripts loaded, some APIs may fail since libfluidsynth is not ready. To avoid this, you can use the Promise object returned by `JSSynth.waitForReady` as above example.
-* libfluidsynth JS file is not `import`-able and its license (LGPL v2.1) is different from js-synthesizer's (BSD-3-Clause).
+* libfluidsynth JS file is not `import`-able (but `require`-able from 2.4.6) and its license (LGPL v2.1) is different from js-synthesizer's (BSD-3-Clause).
 
 ### With AudioWorklet
 
@@ -89,7 +88,7 @@ js-synthesizer supports AudioWorklet process via `dist/js-synthesizer.worklet.js
 
 ```js
 var context = new AudioContext();
-context.audioWorklet.addModule('libfluidsynth-2.3.0.js')
+context.audioWorklet.addModule('libfluidsynth-2.4.6.js')
     .then(function () {
         return context.audioWorklet.addModule('js-synthesizer.worklet.js');
     })
@@ -120,7 +119,7 @@ js-synthesizer and libfluidsynth can be executed on a Web Worker. Executing on a
 To use js-synthesizer on a Web Worker, simply call `importScripts` as followings:
 
 ```js
-self.importScripts('libfluidsynth-2.3.0.js');
+self.importScripts('libfluidsynth-2.4.6.js');
 self.importScripts('js-synthesizer.js');
 ```
 
@@ -130,6 +129,24 @@ Note that since the Web Audio is not supported on the Web Worker, the APIs/metho
     * You need to transfer rendered audio frames from Web Worker to AudioWorklet, but AudioWorklet environment does not support creating Web Worker. By creating `MessageChannel` and sending its port instances to Web Worker and AudioWorklet, they can communicate each other directly.
 * Web Worker thread -- render audio frames into raw buffers and send it for AudioWorklet thread
 * AudioWorklet thread -- receive audio frames (and queue) and 'render' it in the `process` method
+
+### In Node.js environment
+
+From fluidsynth-emscripten version 2.4.6, the library supports Node.js environment. js-synthesizer also supports for this since 1.11.0.
+
+To use js-synthesizer in Node.js environment, load with `require` function:
+
+```js
+const libfluidsynth = require('js-synthesizer/libfluidsynth');
+const JSSynth = require('js-synthesizer');
+
+// Initialize with loaded libfluidsynth
+JSSynth.Synthesizer.initializeWithFluidSynthModule(libfluidsynth);
+
+JSSynth.waitForReady().then(() => {
+  // Now JSSynth.Synthesizer can be constructed
+});
+```
 
 ## API
 
@@ -217,6 +234,10 @@ Can be used to wait for the synthesizer engine's ready.
 
 Return: `Promise` object (resolves when the synthesizer engine (libfluidsynth) is ready)
 
+#### `JSSynth.Synthesizer.initializeWithFluidSynthModule`
+
+Initializes js-synthesizer with (explicitly) loaded libfluidsynth library.
+
 #### `disableLogging` / `restoreLogging`
 
 Can be used to suppress logs from libfluidsynth.
@@ -229,3 +250,5 @@ Can be used to suppress logs from libfluidsynth.
 
 js-synthesizer is licensed under [BSD 3-Clause License](./LICENSE) except for the files in `externals` directory.
 For licenses of the files in `externals` directory, please read [`externals/README.md`](./externals/README.md).
+
+> `libfluidsynth` directory is only a wrapper for `externals/libfluidsynth-*.js`, but uses same license of libfluidsynth for convenience.
