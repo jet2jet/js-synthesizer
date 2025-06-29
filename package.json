@@ -1,6 +1,6 @@
 {
   "name": "js-synthesizer",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "author": "jet",
   "description": "Synthesizer library for web-based JS program, using with Web Audio or etc.",
   "engines": {
