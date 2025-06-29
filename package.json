@@ -33,7 +33,8 @@
     "build:lib:minified": "webpack --config ./build/webpack.config.js --env minified",
     "build:minified": "npm run build:ts && npm run build:lib:minified",
     "build:ts": "tsc -p tsconfig.json",
-    "build-all": "npm run build:ts && npm run build:lib:dev && npm run build:lib:minified"
+    "build-all": "npm run build:ts && npm run build:lib:dev && npm run build:lib:minified",
+    "version": "node ./tools/updateVersion.mjs ./src/main/version.ts && git add -A ./src/main/version.ts"
   },
   "dependencies": {},
   "devDependencies": {

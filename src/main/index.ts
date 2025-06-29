@@ -12,6 +12,7 @@ import SynthesizerSettings from './SynthesizerSettings';
 import waitForReady from './waitForReady';
 import AudioWorkletNodeSynthesizer from './AudioWorkletNodeSynthesizer';
 import { disableLogging, restoreLogging, LogLevel } from './logging';
+import version from './version';
 
 export {
 	Constants,
@@ -33,4 +34,5 @@ export {
 	disableLogging,
 	restoreLogging,
 	LogLevel,
+	version,
 };
