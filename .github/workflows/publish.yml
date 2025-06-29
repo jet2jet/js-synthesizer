@@ -1,0 +1,34 @@
+name: Publish package
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  get-vars:
+    uses: ./.github/workflows/nodevars.yml
+
+  main:
+    needs: get-vars
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ needs.get-vars.outputs.node-version }}
+          registry-url: 'https://registry.npmjs.org'
+      - name: Setup npm
+        run: npm i -g npm@${{ needs.get-vars.outputs.npm-version }}
+      - name: Install
+        run: npm ci
+      - name: Build
+        run: npm run build-all
+      - name: Publish
+        run: npm publish --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
