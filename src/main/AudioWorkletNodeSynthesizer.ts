@@ -10,7 +10,7 @@ import { addLoggingStatusChangedHandler, getDisabledLoggingLevel, LogLevel } fro
 
 /** @internal */
 export const enum Constants {
-	ProcessorName = 'fluid-js',
+	ProcessorName = 'js-synthesizer',
 	UpdateStatus = 'updateStatus',
 }
 /** @internal */

@@ -5,35 +5,22 @@ import ISynthesizer from './ISynthesizer';
 import PointerType, { INVALID_POINTER, UniquePointerType } from './PointerType';
 import SequencerEvent from './SequencerEvent';
 import SequencerEventData from './SequencerEventData';
+import { _module, _removeFunction, bindFunctions } from './WasmManager';
 
 import Synthesizer from './Synthesizer';
 
 type SequencerPointer = UniquePointerType<'sequencer_ptr'>;
 type SequencerId = number;
 
-/** @internal */
-declare global {
-	var Module: any;
-	function removeFunction(funcPtr: number): void;
-}
-
-let _module: any;
-let _removeFunction: (funcPtr: number) => void;
-
+let bound = false;
 let fluid_sequencer_get_client_name: (seq: number, id: number) => string;
 
-function bindFunctions() {
-	if (_module) {
+function bindFunctionsForSequencer() {
+	if (bound) {
 		return;
 	}
-
-	if (typeof AudioWorkletGlobalScope !== 'undefined') {
-		_module = AudioWorkletGlobalScope.wasmModule;
-		_removeFunction = AudioWorkletGlobalScope.wasmRemoveFunction;
-	} else {
-		_module = Module;
-		_removeFunction = removeFunction;
-	}
+	bindFunctions();
+	bound = true;
 
 	fluid_sequencer_get_client_name =
 		_module.cwrap('fluid_sequencer_get_client_name', 'string', ['number', 'number']);
@@ -58,7 +45,7 @@ export default class Sequencer implements ISequencer {
 	public _clientFuncMap: { [id: number]: number };
 
 	constructor() {
-		bindFunctions();
+		bindFunctionsForSequencer();
 
 		this._seq = INVALID_POINTER;
 		this._seqId = -1;

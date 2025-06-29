@@ -1,4 +1,5 @@
-let _module: any;
+import { _module, bindFunctions } from './WasmManager';
+
 let _ptrDefaultLogFunction: number | undefined;
 let _disabledLoggingLevel: LogLevel | null = null;
 const _handlers: Array<(level: LogLevel | null) => void> = [];
@@ -15,18 +16,6 @@ const LogLevel = {
 /** Log level for libfluidsynth */
 type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
 export { LogLevel };
-
-function bindFunctions() {
-	if (typeof AudioWorkletGlobalScope !== 'undefined') {
-		_module = AudioWorkletGlobalScope.wasmModule;
-	} else if (typeof Module !== 'undefined') {
-		_module = Module;
-	} else {
-		throw new Error(
-			'wasm module is not available. libfluidsynth-*.js must be loaded.'
-		);
-	}
-}
 
 /**
  * Disable log output from libfluidsynth.
@@ -77,12 +66,16 @@ export function getDisabledLoggingLevel(): LogLevel | null {
 }
 
 // @internal
-export function addLoggingStatusChangedHandler(fn: (level: LogLevel | null) => void): void {
+export function addLoggingStatusChangedHandler(
+	fn: (level: LogLevel | null) => void
+): void {
 	_handlers.push(fn);
 }
 
 // @internal
-export function removeLoggingStatusChangedHandler(fn: (level: LogLevel | null) => void): void {
+export function removeLoggingStatusChangedHandler(
+	fn: (level: LogLevel | null) => void
+): void {
 	for (let i = 0; i < _handlers.length; ++i) {
 		if (_handlers[i] === fn) {
 			_handlers.splice(i, 1);

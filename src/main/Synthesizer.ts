@@ -12,122 +12,34 @@ import IMIDIEvent from './IMIDIEvent';
 import ISequencer from './ISequencer';
 import ISequencerEventData from './ISequencerEventData';
 import ISynthesizer from './ISynthesizer';
-import PointerType, { INVALID_POINTER, UniquePointerType } from './PointerType';
+import PointerType, { INVALID_POINTER } from './PointerType';
 import SynthesizerSettings from './SynthesizerSettings';
+import {
+	PlayerId,
+	SettingsId,
+	SynthId,
+	_addFunction,
+	_fs,
+	_module,
+	_removeFunction,
+	bindFunctions,
+	defaultMIDIEventCallback,
+	fluid_sequencer_register_client,
+	fluid_settings_setint,
+	fluid_settings_setnum,
+	fluid_settings_setstr,
+	fluid_synth_error,
+	fluid_synth_sfload,
+	malloc,
+	free,
+	waitForInitialized,
+} from './WasmManager';
 
 import MIDIEvent, { MIDIEventType } from './MIDIEvent';
 import Sequencer from './Sequencer';
 import SequencerEvent, { EventType as SequencerEventType } from './SequencerEvent';
 import SequencerEventData from './SequencerEventData';
 import Soundfont from './Soundfont';
-
-/** @internal */
-declare global {
-	var Module: any;
-	function addFunction(func: Function, sig: string): number;
-	function removeFunction(funcPtr: number): void;
-	function addOnPostRun(cb: (Module: any) => void): void;
-}
-
-type SettingsId = UniquePointerType<'settings_id'>;
-type SynthId = UniquePointerType<'synth_id'>;
-type PlayerId = UniquePointerType<'player_id'>;
-
-let _module: any;
-let _addFunction: (func: Function, sig: string) => number;
-let _removeFunction: (funcPtr: number) => void;
-let _fs: any;
-
-// wrapper to use String type
-let fluid_settings_setint: (settings: SettingsId, name: string, val: number) => number;
-let fluid_settings_setnum: (settings: SettingsId, name: string, val: number) => number;
-let fluid_settings_setstr: (settings: SettingsId, name: string, str: string) => number;
-let fluid_synth_error: undefined | ((synth: SynthId) => string);
-let fluid_synth_sfload: (synth: SynthId, filename: string, reset_presets: number) => number;
-let fluid_sequencer_register_client: (seq: PointerType, name: string, callback: number, data: number) => number;
-
-let malloc: (size: number) => PointerType;
-let free: (ptr: PointerType) => void;
-
-let defaultMIDIEventCallback: (data: PointerType, event: MIDIEventType) => number;
-
-function bindFunctions() {
-	if (fluid_synth_error) {
-		// (already bound)
-		return;
-	}
-
-	if (typeof AudioWorkletGlobalScope !== 'undefined') {
-		_module = AudioWorkletGlobalScope.wasmModule;
-		_addFunction = AudioWorkletGlobalScope.wasmAddFunction;
-		_removeFunction = AudioWorkletGlobalScope.wasmRemoveFunction;
-	} else if (typeof Module !== 'undefined') {
-		_module = Module;
-		_addFunction = addFunction;
-		_removeFunction = removeFunction;
-	} else {
-		throw new Error('wasm module is not available. libfluidsynth-*.js must be loaded.');
-	}
-	_fs = _module.FS;
-
-	// wrapper to use String type
-	fluid_settings_setint =
-		_module.cwrap('fluid_settings_setint', 'number', ['number', 'string', 'number']);
-	fluid_settings_setnum =
-		_module.cwrap('fluid_settings_setnum', 'number', ['number', 'string', 'number']);
-	fluid_settings_setstr =
-		_module.cwrap('fluid_settings_setstr', 'number', ['number', 'string', 'string']);
-	fluid_synth_error =
-		_module.cwrap('fluid_synth_error', 'string', ['number']);
-	fluid_synth_sfload =
-		_module.cwrap('fluid_synth_sfload', 'number', ['number', 'string', 'number']);
-	fluid_sequencer_register_client =
-		_module.cwrap('fluid_sequencer_register_client', 'number', ['number', 'string', 'number', 'number']);
-
-	malloc = _module._malloc.bind(_module);
-	free = _module._free.bind(_module);
-
-	defaultMIDIEventCallback = _module._fluid_synth_handle_midi_event.bind(_module);
-}
-
-let promiseWaitForInitialized: Promise<void> | undefined;
-function waitForInitialized() {
-	if (promiseWaitForInitialized) {
-		return promiseWaitForInitialized;
-	}
-
-	let mod: any;
-	let addOnPostRunFn: ((cb: (Module: any) => void) => void) | undefined;
-	if (typeof AudioWorkletGlobalScope !== 'undefined') {
-		mod = AudioWorkletGlobalScope.wasmModule;
-		addOnPostRunFn = AudioWorkletGlobalScope.addOnPostRun;
-	} else if (typeof Module !== 'undefined') {
-		mod = Module;
-		addOnPostRunFn = typeof addOnPostRun !== 'undefined' ? addOnPostRun : undefined;
-	} else {
-		return Promise.reject(new Error('wasm module is not available. libfluidsynth-*.js must be loaded.'));
-	}
-	if (mod.calledRun) {
-		promiseWaitForInitialized = Promise.resolve();
-		return promiseWaitForInitialized;
-	}
-	if (typeof addOnPostRunFn === 'undefined') {
-		promiseWaitForInitialized = new Promise((resolve) => {
-			const fn: (() => void) | undefined = _module.onRuntimeInitialized;
-			_module.onRuntimeInitialized = () => {
-				resolve();
-				if (fn) {
-					fn();
-				}
-			};
-		});
-	} else {
-		promiseWaitForInitialized = new Promise((resolve) => {
-			addOnPostRunFn!(resolve);
-		});
-	}
-	return promiseWaitForInitialized;
-}
 
 function setBoolValueForSettings(settings: SettingsId, name: string, value: boolean | undefined) {
 	if (typeof value !== 'undefined') {
@@ -317,7 +229,16 @@ export default class Synthesizer implements ISynthesizer {
 		this._gain = SynthesizerDefaultValues.Gain;
 	}
 
-	/** Return the promise object that resolves when WebAssembly has been initialized */
+	/**
+	 * Initializes with loaded FluidSynth module.
+	 * If using this method, you must call this before all methods/constructors, including `waitForWasmInitialized`.
+	 * @param mod loaded libfluidsynth.js instance (typically `const mod = Module` (loaded via script tag) or `const mod = require('libfluidsynth-*.js')` (in Node.js))
+	 */
+	public static initializeWithFluidSynthModule(mod: unknown): void {
+		bindFunctions(mod);
+	}
+
+	/** Return the promise object that resolves when WebAssembly has been initialized. */
 	public static waitForWasmInitialized(): Promise<void> {
 		return waitForInitialized();
 	}

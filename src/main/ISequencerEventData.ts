@@ -1,13 +1,11 @@
 
 import SequencerEvent, { EventType } from './SequencerEvent';
+import { _module } from './WasmManager';
 
 /** @internal */
 import PointerType, { INVALID_POINTER } from './PointerType';
 /** @internal */
 import SequencerEventData from './SequencerEventData';
-
-const _module: any = typeof AudioWorkletGlobalScope !== 'undefined' ?
-	AudioWorkletGlobalScope.wasmModule : Module;
 
 /** Event data for sequencer callback. Only available in the callback function due to the instance lifetime. */
 export default interface ISequencerEventData {

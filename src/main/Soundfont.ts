@@ -1,30 +1,21 @@
 import { INVALID_POINTER, UniquePointerType } from './PointerType';
 import Preset from './Preset';
 import Synthesizer from './Synthesizer';
+import { _module, bindFunctions } from './WasmManager';
 
 type SFontPointer = UniquePointerType<'sfont_ptr'>;
 type PresetPointer = UniquePointerType<'preset_ptr'>;
 
-/** @internal */
-declare global {
-	var Module: any;
-}
-
-let _module: any;
-
+let bound = false;
 let fluid_sfont_get_name: (sfont: SFontPointer) => string;
 let fluid_preset_get_name: (preset: PresetPointer) => string;
 
-function bindFunctions() {
-	if (_module) {
+function bindFunctionsForSoundfont() {
+	if (bound) {
 		return;
 	}
-
-	if (typeof AudioWorkletGlobalScope !== 'undefined') {
-		_module = AudioWorkletGlobalScope.wasmModule;
-	} else {
-		_module = Module;
-	}
+	bindFunctions();
+	bound = true;
 
 	fluid_sfont_get_name =
 		_module.cwrap('fluid_sfont_get_name', 'string', ['number']);
@@ -41,7 +32,7 @@ export default class Soundfont {
 	}
 
 	public static getSoundfontById(synth: Synthesizer, id: number): Soundfont | null {
-		bindFunctions();
+		bindFunctionsForSoundfont();
 
 		const sfont = _module._fluid_synth_get_sfont_by_id(synth.getRawSynthesizer(), id);
 		if (sfont === INVALID_POINTER) {
