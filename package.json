@@ -4,8 +4,8 @@
   "author": "jet",
   "description": "Synthesizer library for web-based JS program, using with Web Audio or etc.",
   "engines": {
-    "node": ">=12",
-    "npm": ">=6"
+    "node": ">=14",
+    "npm": ">=9"
   },
   "homepage": "https://github.com/jet2jet/js-synthesizer",
   "keywords": [
@@ -25,7 +25,7 @@
   "types": "./dist/lib/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jet2jet/js-synthesizer.git"
+    "url": "git+https://github.com/jet2jet/js-synthesizer.git"
   },
   "scripts": {
     "build": "npm run build:ts && npm run build:lib:dev",
