@@ -30,5 +30,3 @@ jobs:
         run: npm run build-all
       - name: Publish
         run: npm publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
