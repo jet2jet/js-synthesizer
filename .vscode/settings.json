@@ -1,5 +1,4 @@
 {
-    "typescript.tsdk": "node_modules/typescript/lib",
     "files.exclude": {
       "**/.git": true,
       "**/.svn": true,
@@ -8,5 +7,6 @@
       "**/.DS_Store": true,
       "dist": true,
       "node_modules": true
-    }
+    },
+    "js/ts.tsdk.path": "node_modules/typescript/lib"
 }

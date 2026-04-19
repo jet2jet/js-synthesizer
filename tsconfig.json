@@ -1,11 +1,10 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src/main",
     "declaration": true,
     "declarationDir": "./dist/lib",
     "lib": [ "es5", "es2015", "dom", "dom.iterable" ],
     "module": "es2015",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -17,6 +16,7 @@
       ]
     },
     "removeComments": false,
+    "rootDir": "./src/main",
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
