@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.12.0
+
+- Add `transfer` parameter to `hookPlayerMIDIEventsByName` and `callFunction`, allowing to transfer ownership
+- Support 'globalThis' to add/reference variables defined in the worklet
+
 ## v1.11.0
 
 - Add `Synthesizer.initializeWithFluidSynthModule`

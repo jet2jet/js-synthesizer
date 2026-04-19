@@ -193,7 +193,7 @@ For `JSSynth.AudioWorkletNodeSynthesizer` instance, use `hookPlayerMIDIEventsByN
 * worklet.js
 
 ```js
-// We must add method to AudioWorkletGlobalScope to pass to another module.
+// We must add method to AudioWorkletGlobalScope (or globalThis if available) to pass to another module.
 AudioWorkletGlobalScope.myHookPlayerEvents = function (s, type, event, data) {
     if (type === 0xC0) {
         if (event.getProgram() === 0) {
@@ -204,6 +204,8 @@ AudioWorkletGlobalScope.myHookPlayerEvents = function (s, type, event, data) {
     }
     return false;
 };
+// or
+// globalThis.myHookPlayerEvents = function (s, type, event, data) { ... }
 ```
 
 * main.js
@@ -214,6 +216,7 @@ AudioWorkletGlobalScope.myHookPlayerEvents = function (s, type, event, data) {
 
 // The first parameter is the method name added to 'AudioWorkletGlobalScope'.
 // The second parameter will be passed to the worklet.
+// If the second parameter contains an object whose ownership should be transferred, add the third parameter (like `postMessage`).
 syn.hookPlayerMIDIEventsByName('myHookPlayerEvents', { secondSFont: secondSFont });
 ```
 
