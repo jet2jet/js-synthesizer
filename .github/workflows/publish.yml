@@ -14,6 +14,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    environment:
+      name: Publish
     steps:
       - name: Checkout
         uses: actions/checkout@v3
