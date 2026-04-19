@@ -22,9 +22,7 @@
     "strict": true,
     "stripInternal": true,
     "target": "es2015",
-    "typeRoots": [
-      "../../typings/*"
-    ]
+    "typeRoots": []
   },
   "include": [
     "./src/main/**/*.ts",

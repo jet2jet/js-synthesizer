@@ -63,10 +63,10 @@ export function bindFunctions(module?: any): void {
 		_removeFunction = _module.removeFunction;
 		_addOnPostRunFn = _module.addOnPostRun;
 	} else if (typeof AudioWorkletGlobalScope !== "undefined") {
-		_module = AudioWorkletGlobalScope.wasmModule;
-		_addFunction = _module.addFunction || AudioWorkletGlobalScope.wasmAddFunction;
-		_removeFunction = _module.removeFunction || AudioWorkletGlobalScope.wasmRemoveFunction;
-		_addOnPostRunFn = _module.addOnPostRun || AudioWorkletGlobalScope.addOnPostRun;
+		_module = (AudioWorkletGlobalScope as unknown as Record<string, unknown>).wasmModule;
+		_addFunction = _module.addFunction || (AudioWorkletGlobalScope as unknown as Record<string, unknown>).wasmAddFunction;
+		_removeFunction = _module.removeFunction || (AudioWorkletGlobalScope as unknown as Record<string, unknown>).wasmRemoveFunction;
+		_addOnPostRunFn = _module.addOnPostRun || (AudioWorkletGlobalScope as unknown as Record<string, unknown>).addOnPostRun;
 	} else if (typeof Module !== "undefined") {
 		_module = Module;
 		if (_module.addFunction) {

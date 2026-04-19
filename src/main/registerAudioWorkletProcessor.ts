@@ -32,7 +32,7 @@ export default function registerAudioWorkletProcessor() {
 		private _messaging: ReturnMessageInstance;
 
 		constructor(options: AudioWorkletNodeOptions) {
-			super(options);
+			super();
 
 			const processorOptions: ProcessorOptions | undefined = options.processorOptions;
 			const settings: SynthesizerSettings | undefined =
@@ -153,7 +153,7 @@ export default function registerAudioWorkletProcessor() {
 				this.synth!.hookPlayerMIDIEvents(null);
 				return true;
 			}
-			const fn: any = (AudioWorkletGlobalScope[name]);
+			const fn: any = ((AudioWorkletGlobalScope as unknown as Record<string, unknown>)[name]);
 			if (fn && typeof fn === 'function') {
 				this.synth!.hookPlayerMIDIEvents(fn, param);
 				return true;
@@ -162,7 +162,7 @@ export default function registerAudioWorkletProcessor() {
 		}
 
 		private doCallFunction(name: string, param: any) {
-			const fn: any = (AudioWorkletGlobalScope[name]);
+			const fn: any = ((AudioWorkletGlobalScope as unknown as Record<string, unknown>)[name]);
 			if (fn && typeof fn === 'function') {
 				fn.call(null, this.synth, param);
 				return;
@@ -171,7 +171,7 @@ export default function registerAudioWorkletProcessor() {
 		}
 
 		private doRegisterSequencerClient(seq: Sequencer, clientName: string, callbackName: string, param: number) {
-			const fn: any = (AudioWorkletGlobalScope[callbackName]);
+			const fn: any = ((AudioWorkletGlobalScope as unknown as Record<string, unknown>)[callbackName]);
 			if (fn && typeof fn === 'function') {
 				return Synthesizer.registerSequencerClient(seq, clientName, fn, param);
 			}

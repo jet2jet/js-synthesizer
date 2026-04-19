@@ -38,6 +38,7 @@
     "version": "node ./tools/updateVersion.mjs ./src/main/version.ts && git add -A ./src/main/version.ts"
   },
   "devDependencies": {
+    "@types/audioworklet": "^0.0.97",
     "ts-loader": "^9.5.7",
     "typescript": "~6.0.3",
     "webpack": "^5.106.2",
