@@ -23,7 +23,7 @@ export interface MessageErrorData {
 /** @internal */
 export interface Defer<T> {
 	resolve(value: T): void;
-	reject(reason: any): void;
+	reject(reason: unknown): void;
 }
 
 /** @internal */
@@ -81,7 +81,7 @@ function convertErrorTransferable(err: Error): MessageErrorData {
 	};
 }
 
-function convertAnyErrorTransferable(err: any): MessageErrorData {
+function convertAnyErrorTransferable(err: unknown): MessageErrorData {
 	return convertErrorTransferable((err && err instanceof Error) ? err : new Error(`${err}`));
 }
 
@@ -113,17 +113,22 @@ function processReturnMessage(defers: DeferMap, hook: HookReturnMessageCallback 
 }
 
 /** @internal */
-export function postCall(instance: CallMessageInstance, method: string, args: any[]): void;
+export function postCall(instance: CallMessageInstance, method: string, args: unknown[], transfer?: Transferable[]): void;
 
 /** @internal */
-export function postCall({ port }: CallMessageInstance, method: string, args: any[]) {
-	port.postMessage({
+export function postCall({ port }: CallMessageInstance, method: string, args: unknown[], transfer?: Transferable[]) {
+	const msg: MethodCallEventData = {
 		id: -1, method, args
-	} as MethodCallEventData);
+	};
+	if (transfer) {
+		port.postMessage(msg, transfer);
+	} else {
+		port.postMessage(msg);
+	}
 }
 
 /** @internal */
-export function postCallWithPromise<T>(instance: CallMessageInstance, method: string, args: any[]): Promise<T> {
+export function postCallWithPromise<T>(instance: CallMessageInstance, method: string, args: unknown[], transfer?: Transferable[]): Promise<T> {
 	const id = instance.deferId++;
 	if (instance.deferId === Infinity || instance.deferId < 0) {
 		instance.deferId = 0;
@@ -131,8 +136,8 @@ export function postCallWithPromise<T>(instance: CallMessageInstance, method: st
 	const promise = new Promise<T>((resolve, reject) => {
 		instance.defers[id] = { resolve, reject };
 	});
-	const transfers: Transferable[] = [];
-	if (args[0] instanceof MessagePort) {
+	const transfers: Transferable[] = transfer ? transfer.slice() : [];
+	if (args[0] instanceof MessagePort && transfers.indexOf(args[0]) < 0) {
 		transfers.push(args[0]);
 	}
 	instance.port.postMessage({

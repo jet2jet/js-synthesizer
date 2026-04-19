@@ -283,10 +283,13 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	 *     The type of 'AudioWorkletGlobalScope[callbackName]' must be HookMIDIEventCallback.
 	 * @param param any additional data passed to the callback.
 	 *     This data must be 'Transferable' data.
+	 *     Note that `param` will be transferred to the worklet immediately (once), not transferred at each events.
+	 * @param transfer optional objects (such as `MessagePort`) to transfer ownership to the worklet.
+	 *     The element should be included in `param` data (as `param` itself, a property of `param` object, or etc.).
 	 * @return Promise object that resolves when succeeded, or rejects when failed
 	 */
-	public hookPlayerMIDIEventsByName(callbackName: string | null | undefined, param?: any): Promise<void> {
-		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'hookPlayerMIDIEventsByName', [callbackName, param]);
+	public hookPlayerMIDIEventsByName(callbackName: string | null | undefined, param?: any, transfer?: Transferable[]): Promise<void> {
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'hookPlayerMIDIEventsByName', [callbackName, param], transfer);
 	}
 
 	/**
@@ -319,10 +322,12 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	 *
 	 * @param name a function name (must be retrieved from AudioWorkletGlobalScope[name])
 	 * @param param any parameter (must be Transferable)
+	 * @param transfer optional objects (such as `MessagePort`) to transfer ownership to the worklet.
+	 *     The element should be included in `param` data (as `param` itself, a property of `param` object, or etc.).
 	 * @return Promise object that resolves when the function process has done, or rejects when failed
 	 */
-	public callFunction(name: string, param: any) {
-		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'callFunction', [name, param]);
+	public callFunction(name: string, param: any, transfer?: Transferable[]) {
+		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'callFunction', [name, param], transfer);
 	}
 
 	/** @internal */
