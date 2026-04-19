@@ -153,27 +153,53 @@ export default function registerAudioWorkletProcessor() {
 				this.synth!.hookPlayerMIDIEvents(null);
 				return true;
 			}
-			const fn: any = ((AudioWorkletGlobalScope as unknown as Record<string, unknown>)[name]);
-			if (fn && typeof fn === 'function') {
-				this.synth!.hookPlayerMIDIEvents(fn, param);
-				return true;
+			{
+				const fn: any = ((AudioWorkletGlobalScope as unknown as Record<string, unknown>)[name]);
+				if (fn && typeof fn === 'function') {
+					this.synth!.hookPlayerMIDIEvents(fn, param);
+					return true;
+				}
+			}
+			if (typeof globalThis !== 'undefined') {
+				const fn: any = ((globalThis as unknown as Record<string, unknown>)[name]);
+				if (fn && typeof fn === 'function') {
+					this.synth!.hookPlayerMIDIEvents(fn, param);
+					return true;
+				}
 			}
 			return false;
 		}
 
 		private doCallFunction(name: string, param: any) {
-			const fn: any = ((AudioWorkletGlobalScope as unknown as Record<string, unknown>)[name]);
-			if (fn && typeof fn === 'function') {
-				fn.call(null, this.synth, param);
-				return;
+			{
+				const fn: any = ((AudioWorkletGlobalScope as unknown as Record<string, unknown>)[name]);
+				if (fn && typeof fn === 'function') {
+					fn.call(null, this.synth, param);
+					return;
+				}
+			}
+			if (typeof globalThis !== 'undefined') {
+				const fn: any = ((globalThis as unknown as Record<string, unknown>)[name]);
+				if (fn && typeof fn === 'function') {
+					fn.call(null, this.synth, param);
+					return;
+				}
 			}
 			throw new Error('Name not found');
 		}
 
 		private doRegisterSequencerClient(seq: Sequencer, clientName: string, callbackName: string, param: number) {
-			const fn: any = ((AudioWorkletGlobalScope as unknown as Record<string, unknown>)[callbackName]);
-			if (fn && typeof fn === 'function') {
-				return Synthesizer.registerSequencerClient(seq, clientName, fn, param);
+			{
+				const fn: any = ((AudioWorkletGlobalScope as unknown as Record<string, unknown>)[callbackName]);
+				if (fn && typeof fn === 'function') {
+					return Synthesizer.registerSequencerClient(seq, clientName, fn, param);
+				}
+			}
+			if (typeof globalThis !== 'undefined') {
+				const fn: any = ((globalThis as unknown as Record<string, unknown>)[callbackName]);
+				if (fn && typeof fn === 'function') {
+					return Synthesizer.registerSequencerClient(seq, clientName, fn, param);
+				}
 			}
 			return null;
 		}
