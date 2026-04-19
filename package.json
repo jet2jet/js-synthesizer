@@ -36,11 +36,10 @@
     "build-all": "npm run build:ts && npm run build:lib:dev && npm run build:lib:minified",
     "version": "node ./tools/updateVersion.mjs ./src/main/version.ts && git add -A ./src/main/version.ts"
   },
-  "dependencies": {},
   "devDependencies": {
     "ts-loader": "^9.4.4",
     "typescript": "^4.2.4",
-    "webpack": "^5.88.2",
-    "webpack-cli": "^4.10.0"
+    "webpack": "^5.106.2",
+    "webpack-cli": "^7.0.2"
   }
 }
