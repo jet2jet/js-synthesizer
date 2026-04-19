@@ -12,7 +12,7 @@ on:
 
 env:
   NODE_VERSION: 22
-  NPM_VERSION: 11.16
+  NPM_VERSION: 11.12.1
 
 jobs:
   export:
