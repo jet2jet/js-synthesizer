@@ -2,6 +2,8 @@
 import { SynthesizerDefaultValues, InterpolationValues, PlayerSetTempoType } from './Constants';
 import ISequencer from './ISequencer';
 import ISynthesizer from './ISynthesizer';
+import type Synthesizer from './Synthesizer';
+import type { HookMIDIEventCallback, SequencerClientCallback } from './Synthesizer';
 import SynthesizerSettings from './SynthesizerSettings';
 import WorkletSoundfont from './WorkletSoundfont';
 import WorkletSequencer from './WorkletSequencer';
@@ -280,13 +282,15 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	 * AudioWorkletGlobalScope object available in the worklet is used.
 	 * @param callbackName hook callback function name available as 'AudioWorkletGlobalScope[callbackName]',
 	 *     or falsy value ('', null, or undefined) to unhook.
-	 *     The type of 'AudioWorkletGlobalScope[callbackName]' must be HookMIDIEventCallback.
+	 *     The type of 'AudioWorkletGlobalScope[callbackName]' must be {@linkcode HookMIDIEventCallback}.
 	 * @param param any additional data passed to the callback.
 	 *     This data must be 'Transferable' data.
 	 *     Note that `param` will be transferred to the worklet immediately (once), not transferred at each events.
 	 * @param transfer optional objects (such as `MessagePort`) to transfer ownership to the worklet.
 	 *     The element should be included in `param` data (as `param` itself, a property of `param` object, or etc.).
 	 * @return Promise object that resolves when succeeded, or rejects when failed
+	 * @note In the callback, the first parameter `synthesizer` is an instance of {@linkcode Synthesizer}, not `AudioWorkletNodeSynthesizer`.
+	 *     This means that the synchronous methods such as `getPlayerCurrentTick` can be called.
 	 */
 	public hookPlayerMIDIEventsByName(callbackName: string | null | undefined, param?: any, transfer?: Transferable[]): Promise<void> {
 		return MethodMessaging.postCallWithPromise<void>(this._messaging!, 'hookPlayerMIDIEventsByName', [callbackName, param], transfer);
@@ -297,11 +301,11 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	 * The client callback function defined on AudioWorkletGlobalScope
 	 * object available in the worklet is used.
 	 * The client can receive events in the time from sequencer process.
-	 * @param seq the sequencer instance created by AudioWorkletNodeSynthesizer.createSequencer
+	 * @param seq the sequencer instance created by {@linkcode AudioWorkletNodeSynthesizer.createSequencer}
 	 * @param clientName the client name
 	 * @param callbackName callback function name available as 'AudioWorkletGlobalScope[callbackName]',
 	 *     or falsy value ('', null, or undefined) to unhook.
-	 *     The type of 'AudioWorkletGlobalScope[callbackName]' must be SequencerClientCallback.
+	 *     The type of 'AudioWorkletGlobalScope[callbackName]' must be {@linkcode SequencerClientCallback}.
 	 * @param param additional parameter passed to the callback
 	 * @return Promise object that resolves with registered client id when succeeded, or rejects when failed
 	 */
@@ -315,10 +319,10 @@ export default class AudioWorkletNodeSynthesizer implements ISynthesizer {
 	/**
 	 * Call a function defined in the AudioWorklet.
 	 *
-	 * The function will receive two parameters; the first parameter is a Synthesizer instance
-	 * (not AudioWorkletNodeSynthesizer instance), and the second is the data passed to 'param'.
+	 * The function will receive two parameters; the first parameter is a {@linkcode Synthesizer} instance
+	 * (not `AudioWorkletNodeSynthesizer` instance), and the second is the data passed to 'param'.
 	 * This method is useful when the script loaded in AudioWorklet wants to
-	 * retrieve Synthesizer instance.
+	 * retrieve {@linkcode Synthesizer} instance.
 	 *
 	 * @param name a function name (must be retrieved from AudioWorkletGlobalScope[name])
 	 * @param param any parameter (must be Transferable)

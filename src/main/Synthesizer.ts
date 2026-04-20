@@ -1017,7 +1017,7 @@ export default class Synthesizer implements ISynthesizer {
 
 	/**
 	 * Retrieve current (timing that method called) tick value of the player.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @return the tick value
 	 * @note This method is not available in `AudioWorkletNodeSynthesizer` because of synchronous processings.
 	 */
@@ -1027,7 +1027,7 @@ export default class Synthesizer implements ISynthesizer {
 	}
 	/**
 	 * Retrieve tick value of the last event timing of current playing data.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @return the tick value
 	 * @note This method is not available in `AudioWorkletNodeSynthesizer` because of synchronous processings.
 	 */
@@ -1038,7 +1038,7 @@ export default class Synthesizer implements ISynthesizer {
 	/**
 	 * Retrieve current (timing that method called) BPM value of the player.
 	 * The BPM value is calculated by dividing 60000000 by the MIDI tempo value.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @return the BPM value
 	 * @note This method is not available in `AudioWorkletNodeSynthesizer` because of synchronous processings.
 	 */
@@ -1048,7 +1048,7 @@ export default class Synthesizer implements ISynthesizer {
 	}
 	/**
 	 * Retrieve current (timing that method called) MIDI tempo value of the player.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @return the MIDI tempo value
 	 * @note This method is not available in `AudioWorkletNodeSynthesizer` because of synchronous processings.
 	 */
@@ -1067,7 +1067,7 @@ export default class Synthesizer implements ISynthesizer {
 
 	/**
 	 * Hooks MIDI events sent by the player.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @param callback hook callback function, or null to unhook
 	 * @param param any additional data passed to the callback
 	 */
@@ -1221,7 +1221,7 @@ export default class Synthesizer implements ISynthesizer {
 	/**
 	 * Registers the user-defined client to the sequencer.
 	 * The client can receive events in the time from sequencer process.
-	 * @param seq the sequencer instance created by Synthesizer.createSequencer
+	 * @param seq the sequencer instance created by {@linkcode Synthesizer.createSequencer}
 	 * @param name the client name
 	 * @param callback the client callback function that processes event data
 	 * @param param additional parameter passed to the callback
@@ -1259,7 +1259,7 @@ export default class Synthesizer implements ISynthesizer {
 
 	/**
 	 * Send sequencer event immediately to the specific client.
-	 * @param seq the sequencer instance created by Synthesizer.createSequencer
+	 * @param seq the sequencer instance created by {@linkcode Synthesizer.createSequencer}
 	 * @param clientId registered client id (-1 for registered synthesizer)
 	 * @param event event data
 	 */
@@ -1275,9 +1275,9 @@ export default class Synthesizer implements ISynthesizer {
 	}
 	/**
 	 * (Re-)send event data immediately.
-	 * @param seq the sequencer instance created by Synthesizer.createSequencer
+	 * @param seq the sequencer instance created by {@linkcode Synthesizer.createSequencer}
 	 * @param clientId registered client id (-1 for registered synthesizer)
-	 * @param eventData event data which can be retrieved in SequencerClientCallback
+	 * @param eventData event data which can be retrieved in {@linkcode SequencerClientCallback}
 	 */
 	public static sendEventNow(
 		seq: ISequencer,
@@ -1290,10 +1290,10 @@ export default class Synthesizer implements ISynthesizer {
 		seq.sendEventNow(clientId, eventData);
 	}
 	/**
-	 * Set interval timer process to call processSequencer for this sequencer.
+	 * Set interval timer process to call {@linkcode ISequencer.processSequencer} for this sequencer.
 	 * This method uses 'setInterval' global method to register timer.
-	 * @param seq the sequencer instance created by Synthesizer.createSequencer
-	 * @param msec time in milliseconds passed to both setInterval and processSequencer
+	 * @param seq the sequencer instance created by {@linkcode Synthesizer.createSequencer}
+	 * @param msec time in milliseconds passed to both `setInterval` and `processSequencer`
 	 * @return return value of 'setInterval' (usually passing to 'clearInterval' will reset event)
 	 */
 	public static setIntervalForSequencer(seq: ISequencer, msec: number) {

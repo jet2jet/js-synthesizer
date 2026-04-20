@@ -41,7 +41,7 @@ export default interface ISynthesizer {
 	setGain(gain: number): void;
 	/**
 	 * Specify the channel type, especially whether the channel is for drums.
-	 * init() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @param channel MIDI channel number (0 to MIDI channel count - 1)
 	 * @param isDrum true for drums, false for melodic channels
 	 */
@@ -53,7 +53,7 @@ export default interface ISynthesizer {
 
 	/**
 	 * Load SoundFont data into the synthesizer.
-	 * init() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @param bin SoundFont binary data
 	 * @return resolved with SFont id (larger than zero) if succeeded, or rejected if failed
 	 */
@@ -61,26 +61,26 @@ export default interface ISynthesizer {
 	/**
 	 * Unload SoundFont from the synthesizer.
 	 * Before unloading, the instance will wait for all sound off.
-	 * init() must be called before calling this method.
-	 * @param id SoundFont ID returned by loadSFont
+	 * {@linkcode init} must be called before calling this method.
+	 * @param id SoundFont ID returned by {@linkcode loadSFont}
 	 */
 	unloadSFont(id: number): void;
 	/**
 	 * Unload SoundFont from the synthesizer.
 	 * Before unloading, the instance will wait for all sound off.
-	 * init() must be called before calling this method.
-	 * @param id SoundFont ID returned by loadSFont()
+	 * {@linkcode init} must be called before calling this method.
+	 * @param id SoundFont ID returned by {@linkcode loadSFont}
 	 */
 	unloadSFontAsync(id: number): Promise<void>;
 	/**
 	 * Return the bank offset of SoundFont.
-	 * @param id SoundFont ID returned by loadSFont()
+	 * @param id SoundFont ID returned by {@linkcode loadSFont}
 	 * @return resolved with offset value or zero if id is invalid
 	 */
 	getSFontBankOffset(id: number): Promise<number>;
 	/**
 	 * Specify the bank offset of SoundFont.
-	 * @param id SoundFont ID returned by loadSFont()
+	 * @param id SoundFont ID returned by {@linkcode loadSFont}
 	 * @param offset offset value for bank number
 	 */
 	setSFontBankOffset(id: number, offset: number): void;
@@ -89,7 +89,7 @@ export default interface ISynthesizer {
 
 	/**
 	 * Render audio frames from the synthesizer output.
-	 * init() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @param outBuffer the buffer object that receives frames
 	 */
 	render(outBuffer: AudioBuffer | Float32Array[]): void;
@@ -184,11 +184,11 @@ export default interface ISynthesizer {
 
 	// ----- Player methods -----
 	/**
-	 * Re-initialize the player, playing SMF (MIDI) file data.
-	 * The player is initialized via init() method, but you can reset
+	 * Re-initialize the player for playing SMF (MIDI) file data.
+	 * The player is initialized automatically, but you can reset or explicitly initialize
 	 * the player by using this method.
 	 * (this means all added SMF data will be removed.)
-	 * init() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @return resolve if the player is available or reject if failed
 	 */
 	resetPlayer(): Promise<void>;
@@ -196,7 +196,7 @@ export default interface ISynthesizer {
 	 * Closes the player.
 	 *
 	 * The player is initialized automatically when player methods
-	 * such as `addSMFDataToPlayer` and `playPlayer` are called,
+	 * such as {@linkcode addSMFDataToPlayer} and {@linkcode playPlayer} are called,
 	 * but not closed automatically. When the player is available,
 	 * and its status is not playing, the sound will always be turned off
 	 * (this is FluidSynth behavior), so if you want to avoid this,
@@ -205,19 +205,19 @@ export default interface ISynthesizer {
 	closePlayer(): void;
 	/**
 	 * Return whether the player is processing files.
-	 * Note that this method returns false even if some voices are still active (please check isPlaying()).
+	 * Note that this method returns false even if some voices are still active (please check {@linkcode isPlaying}).
 	 * You can call this method even if not initialized.
 	 */
 	isPlayerPlaying(): boolean;
 	/**
 	 * Add SMF file data to the player.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @return resolved if succeeded, or rejected if failed
 	 */
 	addSMFDataToPlayer(bin: ArrayBuffer): Promise<void>;
 	/**
 	 * Start playing files with the player instance.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @return resolved if playing process is started or rejected if failed
 	 */
 	playPlayer(): Promise<void>;
@@ -228,42 +228,44 @@ export default interface ISynthesizer {
 	stopPlayer(): void;
 	/**
 	 * Retrieve current (timing that method called) tick value of the player.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @return resolved with the tick value
 	 */
 	retrievePlayerCurrentTick(): Promise<number>;
 	/**
 	 * Retrieve tick value of the last event timing of current playing data.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @return resolved with the tick value
 	 */
 	retrievePlayerTotalTicks(): Promise<number>;
 	/**
 	 * Retrieve current (timing that method called) BPM value of the player.
 	 * The BPM value is calculated by dividing 60000000 by the MIDI tempo value.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @return resolved with the BPM value
 	 */
 	retrievePlayerBpm(): Promise<number>;
 	/**
 	 * Retrieve current (timing that method called) MIDI tempo value of the player.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @return resolved with the MIDI tempo value
 	 */
 	retrievePlayerMIDITempo(): Promise<number>;
 	/**
 	 * Seeks the playing point of the player.
-	 * initPlayer() must be called before calling this method.
+	 * {@linkcode init} must be called before calling this method.
 	 * @param ticks the absolute tick value to seek (0 refers the first position)
 	 */
 	seekPlayer(ticks: number): void;
 	/**
 	 * Sets the loop for the playlist in the player.
+	 * {@linkcode init} must be called before calling this method.
 	 * @param loopTimes loop count (`-1` for infinite loop)
 	 */
 	setPlayerLoop(loopTimes: number): void;
 	/**
 	 * Sets the tempo for the player.
+	 * {@linkcode init} must be called before calling this method.
 	 * @param tempoType tempo value type for `tempo`
 	 * @param tempo tempo value
 	 */

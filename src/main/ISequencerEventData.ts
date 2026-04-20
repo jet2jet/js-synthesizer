@@ -144,7 +144,7 @@ export function rewriteEventDataImpl(ev: PointerType, event: SequencerEvent): bo
 }
 
 /**
- * Rewrites event data with specified SequencerEvent object.
+ * Rewrites event data with specified {@linkcode SequencerEvent} object.
  * @param data destination instance
  * @param event source data
  * @return true if succeeded

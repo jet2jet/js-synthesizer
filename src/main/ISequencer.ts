@@ -39,7 +39,7 @@ export default interface ISequencer {
 	getClientCount(): Promise<number>;
 	/**
 	 * Returns registered client by index.
-	 * @param index zero-based index number (max: <<resolved value of getClientCount()>> - 1)
+	 * @param index zero-based index number (max: <<resolved value of {@linkcode getClientCount}>> - 1)
 	 */
 	getClientInfo(index: number): Promise<ClientInfo>;
 	/**
