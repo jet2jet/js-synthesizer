@@ -1016,6 +1016,56 @@ export default class Synthesizer implements ISynthesizer {
 	}
 
 	/**
+	 * Retrieve current (timing that method called) tick value of the player.
+	 * initPlayer() must be called before calling this method.
+	 * @return the tick value
+	 * @note This method is not available in `AudioWorkletNodeSynthesizer` because of synchronous processings.
+	 */
+	public getPlayerCurrentTick(): number {
+		this.ensurePlayerInitialized();
+		return _module._fluid_player_get_current_tick(this._player);
+	}
+	/**
+	 * Retrieve tick value of the last event timing of current playing data.
+	 * initPlayer() must be called before calling this method.
+	 * @return the tick value
+	 * @note This method is not available in `AudioWorkletNodeSynthesizer` because of synchronous processings.
+	 */
+	public getPlayerTotalTicks(): number {
+		this.ensurePlayerInitialized();
+		return _module._fluid_player_get_total_ticks(this._player);
+	}
+	/**
+	 * Retrieve current (timing that method called) BPM value of the player.
+	 * The BPM value is calculated by dividing 60000000 by the MIDI tempo value.
+	 * initPlayer() must be called before calling this method.
+	 * @return the BPM value
+	 * @note This method is not available in `AudioWorkletNodeSynthesizer` because of synchronous processings.
+	 */
+	public getPlayerBpm(): number {
+		this.ensurePlayerInitialized();
+		return _module._fluid_player_get_bpm(this._player);
+	}
+	/**
+	 * Retrieve current (timing that method called) MIDI tempo value of the player.
+	 * initPlayer() must be called before calling this method.
+	 * @return the MIDI tempo value
+	 * @note This method is not available in `AudioWorkletNodeSynthesizer` because of synchronous processings.
+	 */
+	public getPlayerMIDITempo(): number {
+		this.ensurePlayerInitialized();
+		return _module._fluid_player_get_midi_tempo(this._player);
+	}
+
+	/**
+	 * Returns the raw 'player' instance value (pointer).
+	 * @return the raw player pointer or `null` if not initialized
+	 */
+	public getRawPlayer(): number | null {
+		return this._player !== INVALID_POINTER ? this._player : null;
+	}
+
+	/**
 	 * Hooks MIDI events sent by the player.
 	 * initPlayer() must be called before calling this method.
 	 * @param callback hook callback function, or null to unhook
