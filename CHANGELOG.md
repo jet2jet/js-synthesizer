@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.13.0
+
+- Add `getPlayerCurrentTick`, `getPlayerTotalTicks`, `getPlayerBpm`, `getPlayerMIDITempo`, and `getRawPlayer`
+
 ## v1.12.0
 
 - Add `transfer` parameter to `hookPlayerMIDIEventsByName` and `callFunction`, allowing to transfer ownership
