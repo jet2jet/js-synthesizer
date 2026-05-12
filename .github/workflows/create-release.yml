@@ -4,16 +4,23 @@ on:
   push:
     tags:
       - '*'
+permissions: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   release:
+    name: Create GitHub Release
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # for gh release create
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
 
       - name: Extract release notes from CHANGELOG.md
         id: changelog
@@ -31,10 +38,16 @@ jobs:
             echo "EOF" >> "$GITHUB_ENV"
           fi
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+      - name: Create Release
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: ${{ env.TAG_NAME }}
-          body: ${{ env.RELEASE_BODY }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ env.TAG_NAME }}
+          RELEASE_BODY: ${{ env.RELEASE_BODY }}
+        run: |
+          if [ -n "$RELEASE_BODY" ]; then
+            printf '%s\n' "$RELEASE_BODY" > release-notes.md
+            gh release create "$TAG_NAME" --title "$TAG_NAME" --notes-file release-notes.md
+          else
+            gh release create "$TAG_NAME" --title "$TAG_NAME"
+          fi

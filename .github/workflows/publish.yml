@@ -3,29 +3,39 @@ on:
   push:
     tags:
       - 'v*.*.*'
+permissions: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   get-vars:
     uses: ./.github/workflows/nodevars.yml
 
   main:
+    name: Publish package
     needs: get-vars
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
+      id-token: write # for npm publish --provenance
     environment:
       name: Publish
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
       - name: Setup node
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: ${{ needs.get-vars.outputs.node-version }}
           registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
       - name: Setup npm
-        run: npm i -g npm@${{ needs.get-vars.outputs.npm-version }}
+        run: npm i -g npm@${NPM_VERSION}
+        env:
+          NPM_VERSION: ${{ needs.get-vars.outputs.npm-version }}
       - name: Install
         run: npm ci
       - name: Build
